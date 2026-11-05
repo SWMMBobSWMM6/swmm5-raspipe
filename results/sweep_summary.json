@@ -1,0 +1,334 @@
+{
+ "sweep": {
+  "drawn": 1600,
+  "done": 1600,
+  "ran": 1466,
+  "noconduit": 134,
+  "ok": 1336,
+  "cmp": 1163,
+  "tmo_rp": 124,
+  "tmo_ref": 26,
+  "crash_rp": 2,
+  "crash_ref": 2,
+  "refmed": 0.795,
+  "rpmed": 0.005,
+  "refp90": 84.754,
+  "rpp90": 0.017,
+  "refmax": 224882.851,
+  "rpmax": 1341.308,
+  "ref1": 552,
+  "rp1": 2,
+  "ratio": 2.5625,
+  "ratio90": 12.449850618864705,
+  "ratiomax": 127.40625,
+  "unsolved": 14,
+  "trmed": 2.16,
+  "trp90": 3.73,
+  "qn": 46,
+  "qrefmed": 1.726,
+  "qrpmed": 0.072,
+  "qrefp90": 15.386,
+  "qrpp90": 4.616,
+  "qrpmax": 99.509,
+  "qrefmax": 950.0,
+  "hn": 538,
+  "qmed": 0.019133934182123044,
+  "qp90": 0.11764853521283097
+ },
+ "worst": [
+  [
+   "NUM-19_outfall-inflow.inp",
+   -1341.308,
+   -1254.911,
+   0.0,
+   -0.0001388
+  ],
+  [
+   "reverse_flow.inp",
+   1.401,
+   -8.986,
+   0.0,
+   -2.304e-07
+  ],
+  [
+   "NUM-52_p-rs30.inp",
+   0.791,
+   77.816,
+   0.0,
+   8.72e-08
+  ],
+  [
+   "IO-53_c2-first.inp",
+   0.419,
+   -53.092,
+   0.0,
+   4.406e-09
+  ],
+  [
+   "constant_inflow_example.inp",
+   0.346,
+   1.426,
+   0.0,
+   6.265e-05
+  ],
+  [
+   "constant_inflow_example_1.inp",
+   0.346,
+   1.426,
+   0.0,
+   6.265e-05
+  ],
+  [
+   "Exercise5_runoff47_sw5.inp",
+   0.321,
+   -0.077,
+   0.0,
+   1.627e-07
+  ],
+  [
+   "Session15_runoff47_sw5.inp",
+   0.321,
+   -0.077,
+   0.0,
+   1.627e-07
+  ],
+  [
+   "EDSYPHON.inp",
+   0.276,
+   6.225,
+   0.0,
+   2.005e-05
+  ],
+  [
+   "CRASH-13_two-pollutants.inp",
+   0.209,
+   -1.203,
+   0.0,
+   4.1e-06
+  ],
+  [
+   "extran10.inp",
+   0.185,
+   0.131,
+   0.0,
+   1.858e-06
+  ],
+  [
+   "Testext2A.inp",
+   0.173,
+   0.058,
+   0.0,
+   -2.741e-05
+  ]
+ ],
+ "tmo": [
+  "daily_rainfall.inp",
+  "59_Nodes.inp",
+  "sansewer.inp",
+  "C-102-6-.inp",
+  "C102-100y-2.inp",
+  "A-T.inp",
+  "Allow_Ponding_High_CE.inp",
+  "79_Pumps_440_H&H_Elements.inp",
+  "tunnel-1yr.inp",
+  "pitfalls.inp",
+  "589_H_Elements.inp",
+  "449_H_Elements.inp",
+  "Neworifice2.inp",
+  "si_nippean.inp",
+  "CORP.inp",
+  "SWANWET2.inp",
+  "527_H_Elements.inp",
+  "EXIST2.inp",
+  "BASEALL2.inp",
+  "Allow_Ponding_Low_CE.inp",
+  "79_Pumps_440_H&H_Elements.inp",
+  "force_main_example.inp",
+  "72_H&H_Elements (2).inp",
+  "v13_force_main_example.inp",
+  "Existing System 2008.inp",
+  "washington.inp",
+  "121005 - Eastern and Western Forcemains.inp",
+  "EASTWWF2.inp",
+  "user2_arch_varied.inp",
+  "force_main_example.inp",
+  "CRW-JL81.inp",
+  "CMD-ANL1_v5.5.inp",
+  "E1NBAK.inp",
+  "CDMEXIST.inp",
+  "Allow_Ponding_High_CE.inp",
+  "force_main_gravity_example.inp",
+  "375_H&H_Elements(2).inp",
+  "GOOD3Ma.inp",
+  "e1n.inp",
+  "data-2.inp",
+  "user2_egg_trunk.inp",
+  "375_H&H_Elements (1).inp",
+  "sea_level_pump_model_290_H_Elements.inp",
+  "user2_catenary.inp",
+  "GOOD3M.inp",
+  "coh_v2.23.inp",
+  "user2_gothic.inp",
+  "CMD-ANL1.inp",
+  "211_H&H_Elements.inp",
+  "PROJALL2.inp",
+  "375_H&H_Elements.inp",
+  "1174_H_Elements.inp",
+  "375_H&H_Elements.inp",
+  "USL.inp",
+  "Flat_FM_SeaLevel.inp",
+  "user2.inp",
+  "Session9_SI_PUMP_MID.inp",
+  "TEST4000.inp",
+  "Fixed_NEID3_ExistingB&M(2).inp",
+  "3487_H_Elements_SI_Units.inp",
+  "470_H&H_Elements.inp",
+  "Exported_ICM_SWMM_Session4_40_Subs_327_Links.inp",
+  "2293_H_Elements.inp",
+  "420LP.inp",
+  "CWEST5B.inp",
+  "2015_H&H_Elements.inp",
+  "830_H&H_Elements.inp",
+  "470_H&H_Elements.inp",
+  "ERASE_EA.inp",
+  "G_EX10.inp",
+  "Session60_froude_dampen.inp",
+  "user4_semi_circular.inp",
+  "user4.inp",
+  "20_Subs_1050_Nodes.inp",
+  "MiddleMillCreek_SW5.inp",
+  "KKE1A.inp",
+  "1845_H&H_Elements.inp",
+  "1465_Nodes.inp",
+  "many_Isolated_Nodes.inp",
+  "Rec_Plan.xp.inp",
+  "froude_keep.inp",
+  "strict1.inp",
+  "EXI-TB.inp",
+  "700_Nodes.inp",
+  "1561_H&H_Elements (2).inp",
+  "2169_H&H_Elements.inp",
+  "user4_triangular.inp",
+  "Exercise_SI_PUMP_MID.inp",
+  "HSD4.inp",
+  "HP5.inp",
+  "seepage.inp",
+  "Session29_292_Storage_Nodes_200_Subs.inp",
+  "1482_Nodes.inp",
+  "Greenville_SI_1_Month.inp",
+  "534_Node_Tunnel_Network_300_Subs.inp",
+  "1220_Nodes.inp",
+  "Interceptor.inp",
+  "user4_parabolic.inp",
+  "user4 _slot.inp",
+  "Session58_Interceptor.inp",
+  "HP5A.inp",
+  "user4_vert_ellipse.inp",
+  "Sm4.inp",
+  "Existing Northeast Storm.inp",
+  "user4_semi_elliptical.inp",
+  "1350_H&H_Elements.inp",
+  "3010_H&H_Elements.inp",
+  "505_H&H_Elements(2).inp",
+  "Session9_SI_PUMP_MID.inp",
+  "1900_Nodes.inp",
+  "froude_ignore.inp",
+  "292_Storage_Nodes_200_Subs.inp",
+  "222_Pumps.inp",
+  "AUG5TO8.inp",
+  "4902_H_Elements.inp",
+  "2079_Nodes.inp",
+  "many_Isolated_Nodes.inp",
+  "392_Nodes.inp",
+  "16_Subs_Continuous_USA_Units.inp",
+  "user4_power.inp",
+  "10_Outfalls.inp",
+  "559_H&H_Elements(2).inp",
+  "Session60_froude_dampen.inp",
+  "user4_custom_shape.inp"
+ ],
+ "crash": [
+  [
+   "CRASH-04_curve-id-only.inp",
+   -11,
+   -11
+  ],
+  [
+   "CRASH-03_empty-timeseries.inp",
+   -11,
+   -11
+  ]
+ ],
+ "unsolved": [
+  [
+   "TANNER2.inp",
+   2.0,
+   0.17
+  ],
+  [
+   "Session2_user2.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_all_open_shapes.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_parabolic.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_every_shape.inp",
+   2.0,
+   0.0
+  ],
+  [
+   "user2_average_report.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_rect_triangular.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_slot.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_force_main_dw.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_semi_elliptical.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "user2_rect_closed_varied.inp",
+   1.0,
+   0.0
+  ],
+  [
+   "10_Subs_Continuous.inp",
+   32.0,
+   -0.01
+  ],
+  [
+   "Session23_10_Subs_Continuous.inp",
+   32.0,
+   -0.01
+  ]
+ ]
+}

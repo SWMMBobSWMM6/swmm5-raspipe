@@ -1,0 +1,322 @@
+[
+ {
+  "id": "V1",
+  "name": "null control, .out identical: mixed",
+  "expect": "identical",
+  "got": "identical",
+  "unit": "",
+  "err": null,
+  "note": "",
+  "deck": "n_rp_mixed"
+ },
+ {
+  "id": "V1",
+  "name": "null control, .out identical: mixedvs",
+  "expect": "identical",
+  "got": "identical",
+  "unit": "",
+  "err": null,
+  "note": "",
+  "deck": "n_rp_mixedvs"
+ },
+ {
+  "id": "V1",
+  "name": "null control, .out identical: slot",
+  "expect": "identical",
+  "got": "identical",
+  "unit": "",
+  "err": null,
+  "note": "",
+  "deck": "n_rp_slot"
+ },
+ {
+  "id": "V1",
+  "name": "null control, .out identical: fill",
+  "expect": "identical",
+  "got": "identical",
+  "unit": "",
+  "err": null,
+  "note": "",
+  "deck": "n_rp_fill"
+ },
+ {
+  "id": "V2",
+  "name": "lake at rest, largest conduit flow",
+  "expect": 0.0,
+  "got": 0.0,
+  "unit": "cfs",
+  "err": null,
+  "note": "",
+  "deck": "lake"
+ },
+ {
+  "id": "V2",
+  "name": "lake at rest, largest head change",
+  "expect": 0.0,
+  "got": 0.0,
+  "unit": "ft",
+  "err": null,
+  "note": "float32 .out",
+  "deck": "lake"
+ },
+ {
+  "id": "V3",
+  "name": "pressurized pipe, Manning",
+  "expect": 3.5628032947349846,
+  "got": 3.562803268432617,
+  "unit": "cfs",
+  "err": -7.38249216117891e-07,
+  "note": "",
+  "deck": "full"
+ },
+ {
+  "id": "V3",
+  "name": "pressurized pipe, SWE (velocity head lost at exit)",
+  "expect": 3.5071682793388237,
+  "got": 3.5072102546691895,
+  "unit": "cfs",
+  "err": 0.001196843921434971,
+  "note": "",
+  "deck": "full_swe"
+ },
+ {
+  "id": "V4",
+  "name": "sealed series, no free surface anywhere",
+  "expect": 3.562804653837361,
+  "got": 3.562804698944092,
+  "unit": "cfs",
+  "err": 1.2660455786246603e-06,
+  "note": "",
+  "deck": "series"
+ },
+ {
+  "id": "V5",
+  "name": "normal depth Q=5 D=2 S=0.002",
+  "expect": 0.9931789879359609,
+  "got": 0.9943123459815979,
+  "unit": "ft",
+  "err": 0.11411417875365332,
+  "note": "",
+  "deck": "unif"
+ },
+ {
+  "id": "V5",
+  "name": "normal depth Q=12 D=3 S=0.001",
+  "expect": 1.7731326468686985,
+  "got": 1.7745264768600464,
+  "unit": "ft",
+  "err": 0.07860833163324324,
+  "note": "",
+  "deck": "unif"
+ },
+ {
+  "id": "V5",
+  "name": "normal depth Q=1 D=1.5 S=0.01",
+  "expect": 0.30051459917367906,
+  "got": 0.30239421129226685,
+  "unit": "ft",
+  "err": 0.6254644944891613,
+  "note": "",
+  "deck": "unif"
+ },
+ {
+  "id": "V5",
+  "name": "normal depth Q=20 D=4 S=0.0005",
+  "expect": 2.285688241437753,
+  "got": 2.286759853363037,
+  "unit": "ft",
+  "err": 0.046883555939816024,
+  "note": "",
+  "deck": "unif"
+ },
+ {
+  "id": "V6",
+  "name": "pump into full pipe, RASPIPE",
+  "expect": 4.59922853842181,
+  "got": 4.59922981262207,
+  "unit": "cfs",
+  "err": 2.770465197209047e-05,
+  "note": "",
+  "deck": "pump_RASPIPE"
+ },
+ {
+  "id": "V6",
+  "name": "pump into full pipe, EXTRAN",
+  "expect": 4.599229980667898,
+  "got": 4.599237442016602,
+  "unit": "cfs",
+  "err": 0.00016223038931936253,
+  "note": "",
+  "deck": "pump_EXTRAN"
+ },
+ {
+  "id": "V6",
+  "name": "pump into full pipe, SLOT",
+  "expect": 4.59917382298209,
+  "got": 5.140782833099365,
+  "unit": "cfs",
+  "err": 11.776223968984448,
+  "note": "",
+  "deck": "pump_SLOT"
+ },
+ {
+  "id": "V7",
+  "name": "nested only vs plain first, largest C1 difference",
+  "expect": 0.0,
+  "got": 0.0006618499755859375,
+  "unit": "cfs",
+  "err": null,
+  "note": "{\"trials\": 2.4, \"fact\": 7.86, \"nested\": 51982.0, \"fail\": 2.0}",
+  "deck": "nest_b"
+ },
+ {
+  "id": "V8",
+  "name": "time for 2 cfs to fill pipe and shafts to 3 ft",
+  "expect": 26.80823877991494,
+  "got": 27.0,
+  "unit": "min",
+  "err": 0.7153070429554998,
+  "note": "report step 1 min",
+  "deck": "fill"
+ },
+ {
+  "id": "V9",
+  "name": "mixed model, step 1 s, C2 peak",
+  "expect": 59.03594207763672,
+  "got": 59.03594207763672,
+  "unit": "cfs",
+  "err": 0.0,
+  "note": "continuity 0.0 {\"trials\": 2.4, \"fact\": 3.7, \"nested\": 6.0, \"fail\": 0.0}",
+  "deck": "dt"
+ },
+ {
+  "id": "V9",
+  "name": "mixed model, step 5 s, C2 peak",
+  "expect": 59.03594207763672,
+  "got": 59.13051986694336,
+  "unit": "cfs",
+  "err": 0.16020374364868048,
+  "note": "continuity 0.0 {\"trials\": 3.0, \"fact\": 5.16, \"nested\": 184.0, \"fail\": 0.0}",
+  "deck": "dt"
+ },
+ {
+  "id": "V9",
+  "name": "mixed model, step 15 s, C2 peak",
+  "expect": 59.03594207763672,
+  "got": 59.335060119628906,
+  "unit": "cfs",
+  "err": 0.5066710743750387,
+  "note": "continuity 0.0 {\"trials\": 3.1, \"fact\": 5.22, \"nested\": 195.0, \"fail\": 0.0}",
+  "deck": "dt"
+ },
+ {
+  "id": "V9",
+  "name": "mixed model, step 30 s, C2 peak",
+  "expect": 59.03594207763672,
+  "got": 58.764713287353516,
+  "unit": "cfs",
+  "err": -0.45942993494796236,
+  "note": "continuity 0.0 {\"trials\": 3.04, \"fact\": 4.74, \"nested\": 122.0, \"fail\": 0.0}",
+  "deck": "dt"
+ },
+ {
+  "id": "V9",
+  "name": "mixed model, step 60 s, C2 peak",
+  "expect": 59.03594207763672,
+  "got": 58.767372131347656,
+  "unit": "cfs",
+  "err": -0.45492616334617436,
+  "note": "continuity 0.0 {\"trials\": 3.05, \"fact\": 4.56, \"nested\": 74.0, \"fail\": 0.0}",
+  "deck": "dt"
+ },
+ {
+  "id": "V10",
+  "name": "volume ledger closure, mixed model",
+  "expect": 0.0,
+  "got": -3.804e-06,
+  "unit": "ft3",
+  "err": null,
+  "note": "on 304,200 ft3 of inflow",
+  "deck": "ledger"
+ },
+ {
+  "id": "V11",
+  "name": "v1.1 options off, .out identical to v1.0",
+  "expect": 3,
+  "got": 3,
+  "unit": "decks",
+  "err": 0.0,
+  "note": "",
+  "deck": "c11b"
+ },
+ {
+  "id": "V12",
+  "name": "stage boundary, dry start, stage projected: largest flow",
+  "expect": 0.0,
+  "got": 0.0,
+  "unit": "cfs",
+  "err": null,
+  "note": "",
+  "deck": "st1"
+ },
+ {
+  "id": "V12",
+  "name": "same, stage not projected: the surge HEC warns of",
+  "expect": 0.0,
+  "got": 27.256900787353516,
+  "unit": "cfs",
+  "err": null,
+  "note": "",
+  "deck": "st2"
+ },
+ {
+  "id": "V12",
+  "name": "same, EPA 5.2.4 DYNWAVE",
+  "expect": 0.0,
+  "got": 22.54550552368164,
+  "unit": "cfs",
+  "err": null,
+  "note": "",
+  "deck": "st3"
+ },
+ {
+  "id": "V13",
+  "name": "start up spike, no warm up: peak in a 5 cfs pipe",
+  "expect": 5.0,
+  "got": 7.528839588165283,
+  "unit": "cfs",
+  "err": 50.576791763305664,
+  "note": "continuity 0.033",
+  "deck": "w1"
+ },
+ {
+  "id": "V13",
+  "name": "same, RASPIPE_WARMUP 60",
+  "expect": 5.0,
+  "got": 5.0,
+  "unit": "cfs",
+  "err": 0.0,
+  "note": "continuity 0.033",
+  "deck": "w2"
+ },
+ {
+  "id": "V14",
+  "name": "false flood on a steep deck, target Courant 0.9",
+  "expect": 0.02,
+  "got": 0.0,
+  "unit": "ac-ft",
+  "err": -100.0,
+  "note": "EPA 5.2.4 floods 0.02",
+  "deck": "f2"
+ },
+ {
+  "id": "V14",
+  "name": "same, Courant control off",
+  "expect": 0.02,
+  "got": 7.183,
+  "unit": "ac-ft",
+  "err": 35815.0,
+  "note": "the v1.0 result",
+  "deck": "f2"
+ }
+]

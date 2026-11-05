@@ -1,0 +1,1516 @@
+{
+ "build": "3d60128204be",
+ "note": "Each entry ties one result to its input, script, evidence type and build.",
+ "tests": [
+  {
+   "id": "V1",
+   "test": "null control, .out identical: mixed",
+   "evidence": "regression check",
+   "tolerance": "byte identical",
+   "expected": "identical",
+   "result": "identical",
+   "unit": "",
+   "error_percent": null,
+   "input": "tests/v/n_rp_mixed.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V1",
+   "test": "null control, .out identical: mixedvs",
+   "evidence": "regression check",
+   "tolerance": "byte identical",
+   "expected": "identical",
+   "result": "identical",
+   "unit": "",
+   "error_percent": null,
+   "input": "tests/v/n_rp_mixedvs.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V1",
+   "test": "null control, .out identical: slot",
+   "evidence": "regression check",
+   "tolerance": "byte identical",
+   "expected": "identical",
+   "result": "identical",
+   "unit": "",
+   "error_percent": null,
+   "input": "tests/v/n_rp_slot.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V1",
+   "test": "null control, .out identical: fill",
+   "evidence": "regression check",
+   "tolerance": "byte identical",
+   "expected": "identical",
+   "result": "identical",
+   "unit": "",
+   "error_percent": null,
+   "input": "tests/v/n_rp_fill.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V2",
+   "test": "lake at rest, largest conduit flow",
+   "evidence": "analytical answer",
+   "tolerance": "exactly 0",
+   "expected": 0.0,
+   "result": 0.0,
+   "unit": "cfs",
+   "error_percent": null,
+   "input": "tests/v/lake.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V2",
+   "test": "lake at rest, largest head change",
+   "evidence": "analytical answer",
+   "tolerance": "exactly 0",
+   "expected": 0.0,
+   "result": 0.0,
+   "unit": "ft",
+   "error_percent": null,
+   "input": "tests/v/lake.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V3",
+   "test": "pressurized pipe, Manning",
+   "evidence": "analytical answer",
+   "tolerance": "0.01%",
+   "expected": 3.5628032947349846,
+   "result": 3.562803268432617,
+   "unit": "cfs",
+   "error_percent": -7.38249216117891e-07,
+   "input": "tests/v/full.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V3",
+   "test": "pressurized pipe, SWE (velocity head lost at exit)",
+   "evidence": "analytical answer",
+   "tolerance": "0.01%",
+   "expected": 3.5071682793388237,
+   "result": 3.5072102546691895,
+   "unit": "cfs",
+   "error_percent": 0.001196843921434971,
+   "input": "tests/v/full_swe.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V4",
+   "test": "sealed series, no free surface anywhere",
+   "evidence": "analytical answer",
+   "tolerance": "0.01%",
+   "expected": 3.562804653837361,
+   "result": 3.562804698944092,
+   "unit": "cfs",
+   "error_percent": 1.2660455786246603e-06,
+   "input": "tests/v/series.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V5",
+   "test": "normal depth Q=5 D=2 S=0.002",
+   "evidence": "analytical answer",
+   "tolerance": "1%",
+   "expected": 0.9931789879359609,
+   "result": 0.9943123459815979,
+   "unit": "ft",
+   "error_percent": 0.11411417875365332,
+   "input": "tests/v/unif.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V5",
+   "test": "normal depth Q=12 D=3 S=0.001",
+   "evidence": "analytical answer",
+   "tolerance": "1%",
+   "expected": 1.7731326468686985,
+   "result": 1.7745264768600464,
+   "unit": "ft",
+   "error_percent": 0.07860833163324324,
+   "input": "tests/v/unif.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V5",
+   "test": "normal depth Q=1 D=1.5 S=0.01",
+   "evidence": "analytical answer",
+   "tolerance": "1%",
+   "expected": 0.30051459917367906,
+   "result": 0.30239421129226685,
+   "unit": "ft",
+   "error_percent": 0.6254644944891613,
+   "input": "tests/v/unif.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V5",
+   "test": "normal depth Q=20 D=4 S=0.0005",
+   "evidence": "analytical answer",
+   "tolerance": "1%",
+   "expected": 2.285688241437753,
+   "result": 2.286759853363037,
+   "unit": "ft",
+   "error_percent": 0.046883555939816024,
+   "input": "tests/v/unif.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V6",
+   "test": "pump into full pipe, RASPIPE",
+   "evidence": "analytical answer",
+   "tolerance": "0.01%",
+   "expected": 4.59922853842181,
+   "result": 4.59922981262207,
+   "unit": "cfs",
+   "error_percent": 2.770465197209047e-05,
+   "input": "tests/v/pump_RASPIPE.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V6",
+   "test": "pump into full pipe, EXTRAN",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "expected": 4.599229980667898,
+   "result": 4.599237442016602,
+   "unit": "cfs",
+   "error_percent": 0.00016223038931936253,
+   "input": "tests/v/pump_EXTRAN.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V6",
+   "test": "pump into full pipe, SLOT",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "expected": 4.59917382298209,
+   "result": 5.140782833099365,
+   "unit": "cfs",
+   "error_percent": 11.776223968984448,
+   "input": "tests/v/pump_SLOT.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V7",
+   "test": "nested only vs plain first, largest C1 difference",
+   "evidence": "regression check",
+   "tolerance": "0.01 cfs",
+   "expected": 0.0,
+   "result": 0.0006618499755859375,
+   "unit": "cfs",
+   "error_percent": null,
+   "input": "tests/v/nest_b.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V8",
+   "test": "time for 2 cfs to fill pipe and shafts to 3 ft",
+   "evidence": "analytical answer",
+   "tolerance": "one report step",
+   "expected": 26.80823877991494,
+   "result": 27.0,
+   "unit": "min",
+   "error_percent": 0.7153070429554998,
+   "input": "tests/v/fill.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V9",
+   "test": "mixed model, step 1 s, C2 peak",
+   "evidence": "numerical reference",
+   "tolerance": "1% of the 1 s run",
+   "expected": 59.03594207763672,
+   "result": 59.03594207763672,
+   "unit": "cfs",
+   "error_percent": 0.0,
+   "input": "tests/v/dt.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V9",
+   "test": "mixed model, step 5 s, C2 peak",
+   "evidence": "numerical reference",
+   "tolerance": "1% of the 1 s run",
+   "expected": 59.03594207763672,
+   "result": 59.13051986694336,
+   "unit": "cfs",
+   "error_percent": 0.16020374364868048,
+   "input": "tests/v/dt.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V9",
+   "test": "mixed model, step 15 s, C2 peak",
+   "evidence": "numerical reference",
+   "tolerance": "1% of the 1 s run",
+   "expected": 59.03594207763672,
+   "result": 59.335060119628906,
+   "unit": "cfs",
+   "error_percent": 0.5066710743750387,
+   "input": "tests/v/dt.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V9",
+   "test": "mixed model, step 30 s, C2 peak",
+   "evidence": "numerical reference",
+   "tolerance": "1% of the 1 s run",
+   "expected": 59.03594207763672,
+   "result": 58.764713287353516,
+   "unit": "cfs",
+   "error_percent": -0.45942993494796236,
+   "input": "tests/v/dt.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V9",
+   "test": "mixed model, step 60 s, C2 peak",
+   "evidence": "numerical reference",
+   "tolerance": "1% of the 1 s run",
+   "expected": 59.03594207763672,
+   "result": 58.767372131347656,
+   "unit": "cfs",
+   "error_percent": -0.45492616334617436,
+   "input": "tests/v/dt.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V10",
+   "test": "volume ledger closure, mixed model",
+   "evidence": "conservation check",
+   "tolerance": "0.001 ft3",
+   "expected": 0.0,
+   "result": -3.804e-06,
+   "unit": "ft3",
+   "error_percent": null,
+   "input": "tests/v/ledger.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V11",
+   "test": "v1.1 options off, .out identical to v1.0",
+   "evidence": "regression check",
+   "tolerance": "byte identical",
+   "expected": 3,
+   "result": 3,
+   "unit": "decks",
+   "error_percent": 0.0,
+   "input": "tests/v/c11b.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V12",
+   "test": "stage boundary, dry start, stage projected: largest flow",
+   "evidence": "initialization check",
+   "tolerance": "reported",
+   "expected": 0.0,
+   "result": 0.0,
+   "unit": "cfs",
+   "error_percent": null,
+   "input": "tests/v/st1.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V12",
+   "test": "same, stage not projected: the surge HEC warns of",
+   "evidence": "initialization check",
+   "tolerance": "reported",
+   "expected": 0.0,
+   "result": 27.256900787353516,
+   "unit": "cfs",
+   "error_percent": null,
+   "input": "tests/v/st2.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V12",
+   "test": "same, EPA 5.2.4 DYNWAVE",
+   "evidence": "initialization check",
+   "tolerance": "reported",
+   "expected": 0.0,
+   "result": 22.54550552368164,
+   "unit": "cfs",
+   "error_percent": null,
+   "input": "tests/v/st3.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V13",
+   "test": "start up spike, no warm up: peak in a 5 cfs pipe",
+   "evidence": "initialization check",
+   "tolerance": "reported",
+   "expected": 5.0,
+   "result": 7.528839588165283,
+   "unit": "cfs",
+   "error_percent": 50.576791763305664,
+   "input": "tests/v/w1.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V13",
+   "test": "same, RASPIPE_WARMUP 60",
+   "evidence": "initialization check",
+   "tolerance": "reported",
+   "expected": 5.0,
+   "result": 5.0,
+   "unit": "cfs",
+   "error_percent": 0.0,
+   "input": "tests/v/w2.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V14",
+   "test": "false flood on a steep deck, target Courant 0.9",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "expected": 0.02,
+   "result": 0.0,
+   "unit": "ac-ft",
+   "error_percent": -100.0,
+   "input": "tests/v/f2.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "V14",
+   "test": "same, Courant control off",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "expected": 0.02,
+   "result": 7.183,
+   "unit": "ac-ft",
+   "error_percent": 35815.0,
+   "input": "tests/v/f2.inp",
+   "script": "tests/verify.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 1, 20 ft, 0.5 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.359151477457043,
+    "middle_depth": 5.158821308285714,
+    "mean_depth_error": 0.11045232547688397
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.1 implicit upwind, theta 1, 20 ft, 0.5 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 14.732408121704498,
+    "middle_depth": 5.374547706571429,
+    "mean_depth_error": 0.24036259876330354
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 0.6, 20 ft, 0.5 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.89706404986104,
+    "middle_depth": 5.058117360571429,
+    "mean_depth_error": 0.05901530022605897
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 1, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.411792341354538,
+    "middle_depth": 5.160997327714286,
+    "mean_depth_error": 0.08437792137168333
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.1 implicit upwind, theta 1, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 14.755254926742607,
+    "middle_depth": 5.380425672714286,
+    "mean_depth_error": 0.22286194183462374
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 0.6, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.996122878422526,
+    "middle_depth": 5.060525442285714,
+    "mean_depth_error": 0.03387665599914542
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 1, 5 ft, 0.125 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.445752611817845,
+    "middle_depth": 5.162019191702128,
+    "mean_depth_error": 0.06892368798189777
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.1 implicit upwind, theta 1, 5 ft, 0.125 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 14.768991816312587,
+    "middle_depth": 5.379173585460993,
+    "mean_depth_error": 0.21416599715678905
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 0.6, 5 ft, 0.125 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 17.048335996533677,
+    "middle_depth": 5.061505037234043,
+    "mean_depth_error": 0.02042356526545673
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, upstream face area in V*, 5 ft, 0.125 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.054659924239257,
+    "middle_depth": 5.230129852553191,
+    "mean_depth_error": 0.1052983188789477
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 1, time refined, 10 ft, 0.05 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.760888781590243,
+    "middle_depth": 5.098292849428572,
+    "mean_depth_error": 0.04374489460931088
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.1 implicit upwind, time refined, 10 ft, 0.05 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 15.862873222822948,
+    "middle_depth": 5.238166947000001,
+    "mean_depth_error": 0.12071019563763764
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 1, time refined, 10 ft, 0.02 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.838874918041537,
+    "middle_depth": 5.085498865,
+    "mean_depth_error": 0.03584965727332119
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.1 implicit upwind, time refined, 10 ft, 0.02 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.10307021709489,
+    "middle_depth": 5.205377781285715,
+    "mean_depth_error": 0.10155543960345996
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2, theta 0.6, time refined, 10 ft, 0.05 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.911748279253924,
+    "middle_depth": 5.073590895,
+    "mean_depth_error": 0.0318175331220138
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 contraction ratio 1.1, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.428926275877107,
+    "middle_depth": 5.160945423571429,
+    "mean_depth_error": 0.08330200734302819
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 contraction ratio 1.25, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.418655619373826,
+    "middle_depth": 5.160992742714286,
+    "mean_depth_error": 0.08394754977830078
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 contraction ratio 2.0, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.4101466705802,
+    "middle_depth": 5.160997430428571,
+    "mean_depth_error": 0.08445896854668333
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 contraction ratio 4.0, 10 ft, 0.25 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.4101466705802,
+    "middle_depth": 5.160997430428571,
+    "mean_depth_error": 0.08445896854668333
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 long step, Courant near 3, 10 ft, 1.0 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 15.983122087575627,
+    "middle_depth": 5.2419723629999995,
+    "mean_depth_error": 0.15290128887684654
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 long step, Courant near 6, 10 ft, 2.0 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 15.731207835333134,
+    "middle_depth": 5.281273623571428,
+    "mean_depth_error": 0.20660412586714247
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B1",
+   "test": "Stoker dam break: v1.2 long step, Courant near 3, theta 0.6, 10 ft, 1.0 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": {
+    "bore_speed": 17.011868888128287,
+    "middle_depth": 5.078714344566669
+   },
+   "result": {
+    "bore_speed": 16.306495738336178,
+    "middle_depth": 5.190258902857143,
+    "mean_depth_error": 0.11767158858769498
+   },
+   "input": "tests/bench1.py (writes its own deck)",
+   "script": "tests/bench1.py",
+   "build": "3d60128204be (test build, tests/testhook.py)"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 1.0, 60 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 531.8498186535845,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 1.0, 30 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 467.4972472169135,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 1.0, 10 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 444.48506214532733,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 1.0, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 441.84907423625316,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.6, 60 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 466.3095990196551,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.6, 30 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 447.2392944892434,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.6, 10 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 441.92045160464113,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.6, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 441.68106368978243,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.5, 10 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 441.6899629676171,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE diffusion wave (no inertia), 10 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": null,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: EPA 5.2.4 EXTRAN, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 521.171659715825,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: EPA 5.2.4 SLOT, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 433.0631016861457,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: EPA 5.2.4 EXTRAN, full pipe adds no surface, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 441.7351904521962,
+   "result": 441.750671707042,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: EPA 5.2.4 EXTRAN, 4,000 ft2 tanks, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 883.4703809043924,
+   "result": 925.7881437284972,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: same, full pipe adds no surface, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 883.4703809043924,
+   "result": 883.5150637947155,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B2",
+   "test": "U-tube: RASPIPE SWE, theta 0.6, 4,000 ft2 tanks, 2 s",
+   "evidence": "analytical answer",
+   "tolerance": "reported",
+   "expected": 883.4703809043924,
+   "result": 884.0220835977509,
+   "unit": "s",
+   "input": "tests/bench2.py (writes its own deck)",
+   "script": "tests/bench2.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 12.5 ft, 1 s, theta 1.0",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.953264236450195,
+    "peak_err": -0.1050570576595509,
+    "tp_err": 0.0,
+    "rise_err": 0.010531455283718572,
+    "rmse": 0.008828122615748871,
+    "nse": 0.9999954766845311,
+    "vol_err": 0.04933116262714587,
+    "osc": -9.203030670867918e-09,
+    "y_err": 0.0049681551142002345,
+    "cont": "0.000",
+    "steps": "min 1.000, mean 1.000, max 1.000",
+    "cr": "0.282"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 12.5 ft, 1 s, theta 0.6",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.958386421203613,
+    "peak_err": -0.07083841846533817,
+    "tp_err": 0.0,
+    "rise_err": 0.004081529488949798,
+    "rmse": 0.006219088781131356,
+    "nse": 0.9999977552205497,
+    "vol_err": 0.04930909813621504,
+    "osc": -9.199392803083128e-09,
+    "y_err": 0.004461796549056762,
+    "cont": "0.000",
+    "steps": "min 1.000, mean 1.000, max 1.000",
+    "cr": "0.282"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 50 ft, 5 s, theta 1.0",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.88348388671875,
+    "peak_err": -0.5712231030590195,
+    "tp_err": 0.0,
+    "rise_err": 0.10045142868889201,
+    "rmse": 0.05472468768405522,
+    "nse": 0.9998261852019901,
+    "vol_err": 0.04916097213773635,
+    "osc": -2.7758628950991238e-08,
+    "y_err": 0.020019722521403605,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.525"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 50 ft, 5 s, theta 0.6",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.908980369567871,
+    "peak_err": -0.4008944270476105,
+    "tp_err": 0.0,
+    "rise_err": 0.07163101159901686,
+    "rmse": 0.04026377944610099,
+    "nse": 0.9999059087492678,
+    "vol_err": 0.04939002966665631,
+    "osc": -2.770380302941078e-08,
+    "y_err": 0.017155397622134805,
+    "cont": "0.000",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.525"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 100 ft, 5 s, theta 1.0",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.819168090820312,
+    "peak_err": -1.000883320384975,
+    "tp_err": 0.0,
+    "rise_err": 0.09085678269325115,
+    "rmse": 0.0914324897977033,
+    "nse": 0.9995147994806656,
+    "vol_err": 0.04870965106889926,
+    "osc": -1.3948946075981183e-07,
+    "y_err": 0.03331407895304328,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.287"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: full equations, 100 ft, 5 s, theta 0.6",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.844477653503418,
+    "peak_err": -0.8318033603076687,
+    "tp_err": 0.0,
+    "rise_err": 0.06471239197830414,
+    "rmse": 0.07789775216405466,
+    "nse": 0.999647815680163,
+    "vol_err": 0.04878830373782547,
+    "osc": -1.299336309656951e-07,
+    "y_err": 0.030423253681436835,
+    "cont": "0.000",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.287"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 12.5 ft, 1 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.891389846801758,
+    "peak_err": -0.5184075158462055,
+    "tp_err": 0.0,
+    "rise_err": 0.05080342592219722,
+    "rmse": 0.03417210490889171,
+    "nse": 0.9999322259206784,
+    "vol_err": 0.04939952847259758,
+    "osc": -9.247202115147957e-09,
+    "y_err": 0.010493588984111124,
+    "cont": "0.000",
+    "steps": "min 1.000, mean 1.000, max 1.000",
+    "cr": "0.311"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 800 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 13.832842826843262,
+    "peak_err": -7.590006899663506,
+    "tp_err": 1.000000003259629,
+    "rise_err": 0.7071647678096795,
+    "rmse": 0.5796650736425253,
+    "nse": 0.9804982119473648,
+    "vol_err": 0.04137667937109868,
+    "osc": -0.00015158030614437212,
+    "y_err": 0.2185442743432795,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.041"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 400 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.398629188537598,
+    "peak_err": -3.810283929127184,
+    "tp_err": 0.0,
+    "rise_err": -0.1867855065144255,
+    "rmse": 0.30539917844411824,
+    "nse": 0.994586777310527,
+    "vol_err": 0.04848791997326135,
+    "osc": -1.3215078395800717e-05,
+    "y_err": 0.11312433707357017,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.083"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 200 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.635296821594238,
+    "peak_err": -2.2292311685625577,
+    "tp_err": 0.0,
+    "rise_err": 0.012031466348503272,
+    "rmse": 0.18304264778330115,
+    "nse": 0.9980554247967346,
+    "vol_err": 0.0487196397235774,
+    "osc": -1.2642365775361597e-06,
+    "y_err": 0.05962063863321165,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.164"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.758391380310059,
+    "peak_err": -1.406900757958608,
+    "tp_err": 0.0,
+    "rise_err": 0.08801500422433861,
+    "rmse": 0.11396158779500795,
+    "nse": 0.9992462329521004,
+    "vol_err": 0.04868622352061363,
+    "osc": -1.354821449472965e-07,
+    "y_err": 0.03487679352976447,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.316"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 50 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.821877479553223,
+    "peak_err": -0.9827833103401493,
+    "tp_err": 0.0,
+    "rise_err": 0.1195239917467319,
+    "rmse": 0.07810400301106706,
+    "nse": 0.999645948245611,
+    "vol_err": 0.048992890127672536,
+    "osc": -2.789200326258623e-08,
+    "y_err": 0.023977845814005194,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.583"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 25 ft, 5 s",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.853556632995605,
+    "peak_err": -0.7711514435083938,
+    "tp_err": 0.0,
+    "rise_err": 0.13251910380862597,
+    "rmse": 0.06077173258549259,
+    "nse": 0.9997856500429015,
+    "vol_err": 0.04913183678677749,
+    "osc": -1.8548840352572427e-08,
+    "y_err": 0.019148660242656046,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "1.000"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 60 s, Courant off",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.450469970703125,
+    "peak_err": -3.4639627584032575,
+    "tp_err": 1.000000003259629,
+    "rise_err": 1.1619027968902174,
+    "rmse": 0.36204014892876984,
+    "nse": 0.9923926458556597,
+    "vol_err": 0.04882272093603418,
+    "osc": -8.138466373042164e-07,
+    "y_err": 0.11442014565683967,
+    "cont": "0.078",
+    "steps": "min 60.000, mean 60.000, max 60.000",
+    "cr": "3.776"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 30 s, Courant off",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.618062019348145,
+    "peak_err": -2.3443678744865593,
+    "tp_err": 0.0,
+    "rise_err": 0.5863567075683349,
+    "rmse": 0.2207811836293986,
+    "nse": 0.9971709261835302,
+    "vol_err": 0.04881856787065627,
+    "osc": -3.212151941101027e-07,
+    "y_err": 0.07200631489969855,
+    "cont": "0.039",
+    "steps": "min 30.000, mean 30.000, max 30.000",
+    "cr": "1.893"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 15 s, Courant off",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.703245162963867,
+    "peak_err": -1.7753038135172285,
+    "tp_err": 0.0,
+    "rise_err": 0.2932564850512662,
+    "rmse": 0.15305940787418004,
+    "nse": 0.998640309001524,
+    "vol_err": 0.048777953021037455,
+    "osc": -1.9237521309278804e-07,
+    "y_err": 0.04992207875467902,
+    "cont": "0.020",
+    "steps": "min 15.000, mean 15.000, max 15.000",
+    "cr": "0.948"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 5 s, Courant off",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.758391380310059,
+    "peak_err": -1.406900757958608,
+    "tp_err": 0.0,
+    "rise_err": 0.08801500422433861,
+    "rmse": 0.11396158779500795,
+    "nse": 0.9992462329521004,
+    "vol_err": 0.04868622352061363,
+    "osc": -1.354821449472965e-07,
+    "y_err": 0.03487679352976447,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.316"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: diffusion wave, 100 ft, 1 s, Courant off",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.780259132385254,
+    "peak_err": -1.2608137356679177,
+    "tp_err": 0.0,
+    "rise_err": 0.004651903081132502,
+    "rmse": 0.10167747975687937,
+    "nse": 0.9993999744957285,
+    "vol_err": 0.04860759214945858,
+    "osc": -1.2125891757364116e-07,
+    "y_err": 0.028817673469027083,
+    "cont": "0.000",
+    "steps": "min 1.000, mean 1.000, max 1.000",
+    "cr": "0.063"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: RASPIPE defaults, 100 ft, ROUTING_STEP 30, Courant 0.9",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.7109375,
+    "peak_err": -1.7239153302291035,
+    "tp_err": 0.0,
+    "rise_err": 0.28123694966209456,
+    "rmse": 0.14543578426140963,
+    "nse": 0.9987723834943093,
+    "vol_err": 0.050945938339389714,
+    "osc": -1.922587925529129e-07,
+    "y_err": 0.047350019123331366,
+    "cont": "0.020",
+    "steps": "min 7.500, mean 14.526, max 15.000",
+    "cr": "0.900"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: RASPIPE defaults, ROUTING_STEP 5, Courant 0.9",
+   "evidence": "numerical reference",
+   "tolerance": "reported",
+   "result": {
+    "peak": 14.758391380310059,
+    "peak_err": -1.406900757958608,
+    "tp_err": 0.0,
+    "rise_err": 0.08801500422433861,
+    "rmse": 0.11396158779500795,
+    "nse": 0.9992462329521004,
+    "vol_err": 0.04868622352061363,
+    "osc": -1.354821449472965e-07,
+    "y_err": 0.03487679352976447,
+    "cont": "0.007",
+    "steps": "min 5.000, mean 5.000, max 5.000",
+    "cr": "0.316"
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: EPA 5.2.4, the model as built",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "result": {
+    "peak": 13.043548583984375,
+    "peak_err": -12.862869206403827,
+    "tp_err": -0.99999999278225,
+    "rise_err": -1.9060007708129163,
+    "rmse": 1.0367285199144574,
+    "nse": 0.9376192981805577,
+    "vol_err": 0.648401365882097,
+    "osc": -0.0012168691139635701,
+    "y_err": 0.36666197130669254,
+    "cont": "-2.843",
+    "steps": null,
+    "cr": null
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  },
+  {
+   "id": "B3",
+   "test": "Wave: EPA 5.2.4, 160 conduits of 50 ft, 0.05 s",
+   "evidence": "cross-engine comparison",
+   "tolerance": "reported",
+   "result": {
+    "peak": 15.420363426208496,
+    "peak_err": 3.015388496668183,
+    "tp_err": 1.000000003259629,
+    "rise_err": 0.623244789028206,
+    "rmse": 0.2681055922675464,
+    "nse": 0.9958281190169622,
+    "vol_err": 0.01671552158383139,
+    "osc": 0.004837744842521863,
+    "y_err": 0.0820893051637861,
+    "cont": "-0.111",
+    "steps": null,
+    "cr": null
+   },
+   "input": "tests/bench3.py (writes its own deck)",
+   "script": "tests/bench3.py",
+   "build": "3d60128204be"
+  }
+ ]
+}

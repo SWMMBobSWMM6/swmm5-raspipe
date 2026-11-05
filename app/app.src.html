@@ -1,0 +1,754 @@
+<title>SWMM5 RASPIPE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="color-scheme" content="dark light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script>
+/* dark on first paint, before anything is drawn */
+(function(){var p='dark';try{var v=localStorage.getItem('raspipe_theme');if(v==='light'||v==='auto'||v==='dark')p=v;}catch(e){}
+var d=p==='dark'||(p==='auto'&&(!window.matchMedia||matchMedia('(prefers-color-scheme: dark)').matches));
+document.documentElement.setAttribute('data-theme',d?'dark':'light');})();
+</script>
+<style>
+/* Layout: lockup header, tab bar, controls left and results right (1fr / 2fr), stacking at 900px. */
+:root{
+  color-scheme:dark;
+  --bg:#0b1220;--card:#131c2e;--field:#1a2438;--line:#2a3752;--line-soft:#212c42;
+  --ink:#dbe4f0;--ink-strong:#f1f5f9;--ink-dim:#a3b1c6;--ink-faint:#8b9bb5;--head:#dbe7f7;
+  --accent:#60a5fa;--accent-ink:#0b1220;--tab-on:#60a5fa;--row-hover:#1a2438;--shadow:rgba(0,0,0,.45);
+  --headerbg:#0d1830;--onheader:#eaf2ff;--headersub:#b9cbe4;--btn-dark:#2f4f7a;
+  --panel:#152238;--panel-line:#2b3d5c;--panel-ink:#c3d7f3;
+  --hi-bg:#2a1c0f;--hi-line:#7c4a1d;--hi-ink:#fdba74;
+  --warn-bg:#2a1416;--warn-line:#7f2b32;--warn-ink:#fca5a5;
+  --ok-bg:#0f2318;--ok-line:#245c39;--ok-ink:#86efac;
+  --code-bg:#070d18;--code-ink:#dbe4f0;
+  --face:#0f1a2c;--grid:#1e293b;--axis:#94a3b8;
+  --s1:#fbbf24;--s2:#60a5fa;--s3:#4ade80;--s4:#f472b6;--s5:#c084fc;
+  --water:#2563eb;--steel:#94a3b8;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f6f8fb;--card:#ffffff;--field:#ffffff;--line:#dfe5ee;--line-soft:#eef1f6;
+  --ink:#334155;--ink-strong:#111827;--ink-dim:#566274;--ink-faint:#6b7280;--head:#1e3a5f;
+  --accent:#2563eb;--accent-ink:#ffffff;--tab-on:#60a5fa;--row-hover:#f5f8fc;--shadow:rgba(15,23,42,.07);
+  --headerbg:#1e3a5f;--onheader:#ffffff;--headersub:#c7d7ea;--btn-dark:#2b5580;
+  --panel:#eff6ff;--panel-line:#dbeafe;--panel-ink:#1e3a5f;
+  --hi-bg:#fff7ed;--hi-line:#fed7aa;--hi-ink:#c2410c;
+  --warn-bg:#fef2f2;--warn-line:#fecaca;--warn-ink:#991b1b;
+  --ok-bg:#f0fdf4;--ok-line:#bbf7d0;--ok-ink:#166534;
+  --code-bg:#0f172a;--code-ink:#e2e8f0;
+  --face:#ffffff;--grid:#edf0f5;--axis:#566274;
+  --s1:#b45309;--s2:#2563eb;--s3:#15803d;--s4:#be185d;--s5:#7c3aed;
+  --water:#3b82f6;--steel:#64748b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{color:var(--head);text-wrap:balance;margin:0;line-height:1.25}
+h2{font-size:26px;font-weight:600}h3{font-size:15px;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:13px}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--headerbg)}
+
+/* header */
+.hdr{background:var(--headerbg);color:var(--onheader);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hdr-in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+.lock{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 280px}
+.lock svg{flex:none}
+.lock h1{font-size:18px;font-weight:700;color:var(--onheader);letter-spacing:.2px}
+.lock p{font-size:13px;color:var(--headersub)}
+.pill{font:500 11px var(--mono);padding:2px 7px;border-radius:999px;border:1px solid var(--headersub);color:var(--headersub);white-space:nowrap}
+.cluster{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--field)}
+.seg button{border:0;background:transparent;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--ink-dim)}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.hdr .seg{border-color:var(--btn-dark);background:transparent}
+.hdr .seg button{color:var(--headersub)}
+.hdr .seg button.on{background:var(--btn-dark);color:var(--onheader)}
+.hbtn{border:1px solid var(--btn-dark);background:var(--btn-dark);color:var(--onheader);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.hbtn:disabled{opacity:.55;cursor:default}
+
+/* tabs */
+.tabs{background:var(--headerbg);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tabs-in{max-width:1280px;margin:0 auto;display:flex;gap:4px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:var(--headersub);padding:8px 12px;font-size:15px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--onheader);border-bottom-color:var(--tab-on);font-weight:600}
+
+/* body */
+main{max-width:1280px;margin:0 auto;padding-block:16px 8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.pane{display:flex;flex-direction:column;gap:16px}
+.pane[hidden]{display:none}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;min-width:0;box-shadow:0 1px 2px var(--shadow)}
+.card>h3{margin-bottom:8px}
+.box{border-radius:12px;padding:12px 16px;border:1px solid;font-size:13px;line-height:1.5}
+.box.panel{background:var(--panel);border-color:var(--panel-line);color:var(--panel-ink)}
+.box.hi{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi-ink)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+.box.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok-ink)}
+.box code{color:inherit}
+.intro{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.intro button{background:none;border:0;color:inherit;cursor:pointer;font-size:13px;text-decoration:underline;white-space:nowrap}
+
+/* controls */
+.ctl{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.ctl>label,.lbl{font-size:13px;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;gap:8px}
+.ctl output{font:500 13px var(--mono);color:var(--head)}
+.ctl small{font-size:11px;color:var(--ink-faint);line-height:1.4}
+select,input[type=number]{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:24px}
+input[type=file]{font-size:13px;width:100%;color:var(--ink-dim)}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;width:100%}
+.primary:disabled{opacity:.6;cursor:default}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font-size:13px;color:var(--ink-dim);min-height:20px;margin-top:8px}
+#drop.over{outline:2px dashed var(--accent);outline-offset:4px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:620px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.tile b{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+.tile .pair{display:flex;flex-wrap:wrap;gap:0 12px;align-items:baseline;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tile .v1{font-size:15px;color:var(--s1)}
+.tile .v2{font-size:15px;color:var(--s2);font-weight:600}
+.tile .v0{font-size:15px;color:var(--ink-strong)}
+.tile i{font-style:normal;font-size:11px;color:var(--ink-faint);display:block}
+
+.tiles.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.tiles.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+h4{font-size:15px;font-weight:600;color:var(--head);margin:20px 0 6px}
+#rec{overflow-wrap:anywhere}
+/* chart + table */
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-weight:600;text-align:left;color:var(--ink-dim);border-bottom:1px solid var(--line);padding:6px 8px;white-space:nowrap}
+td{border-bottom:1px solid var(--line-soft);padding:6px 8px;vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{font:500 11px var(--mono);padding:1px 6px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok-ink);border:1px solid var(--ok-line)}
+.chip.warn{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line)}
+.chip.hi{background:var(--hi-bg);color:var(--hi-ink);border:1px solid var(--hi-line)}
+
+/* doc */
+.doc{max-width:760px;width:100%;margin:0 auto}
+.doc h2{margin:32px 0 8px}
+.doc h3{margin:24px 0 6px;font-size:15px}
+.doc p{margin:0 0 12px;line-height:1.65}
+.doc ul,.doc ol{margin:0 0 12px;padding-left:22px;line-height:1.6}
+.doc figure{margin:16px 0 20px}
+.doc figcaption{font-size:13px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
+.doc .eq{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--panel-ink);border:1px solid var(--panel-line);border-radius:8px;padding:8px 12px;margin:0 0 12px;overflow-x:auto;white-space:pre}
+.doc pre{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:10px 12px;overflow-x:auto;margin:0 0 12px}
+.toc{display:flex;flex-direction:column;gap:2px;font-size:13px;margin:12px 0 0}
+.doc summary{cursor:pointer;list-style:none}.doc summary::-webkit-details-marker{display:none}
+.toc a{text-decoration:none}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(3,7,18,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal[hidden]{display:none}
+.modal>div{background:var(--card);border:1px solid var(--line);border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:20px}
+.modal h2{font-size:18px;margin-bottom:8px}
+.modal ol{padding-left:20px;margin:8px 0 16px;line-height:1.55;font-size:15px}
+.prov{max-width:1280px;margin:0 auto;padding-block:8px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:11px;color:var(--ink-faint);line-height:1.6}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+<header class="hdr"><div class="hdr-in">
+  <div class="lock">
+    <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true"><circle cx="19" cy="19" r="16" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4.6 24 A16 16 0 0 0 33.4 24 Z" fill="var(--s2)"/><path d="M19 3v-3" stroke="currentColor" stroke-width="2.4"/></svg>
+    <div><h1>SWMM5 RASPIPE <span class="pill" id="ver"></span></h1><p>EPA SWMM 5.2.4 with a semi-implicit pipe solver built from the published HEC-RAS method</p></div>
+  </div>
+  <div class="cluster">
+    <div class="seg" id="theme-toggle" role="group" aria-label="Color theme"><button data-t="dark" class="on">Dark</button><button data-t="light">Light</button><button data-t="auto">Auto</button></div>
+    <button class="hbtn" id="helpBtn" aria-label="How to use">?</button>
+    <button class="hbtn" id="gifBtn">Make a GIF</button>
+    <button class="hbtn" id="csvBtn">Export CSV</button>
+  </div>
+</div></header>
+<nav class="tabs" aria-label="Sections"><div class="tabs-in" role="tablist">
+  <button role="tab" id="t-run" aria-controls="p-run" aria-selected="true">Run</button>
+  <button role="tab" id="t-prof" aria-controls="p-prof" aria-selected="false">Profile</button>
+  <button role="tab" id="t-cell" aria-controls="p-cell" aria-selected="false">Inside a cell</button>
+  <button role="tab" id="t-verify" aria-controls="p-verify" aria-selected="false">Verify</button>
+  <button role="tab" id="t-about" aria-controls="p-about" aria-selected="false">About</button>
+  <button role="tab" id="t-doc" aria-controls="p-doc" aria-selected="false">Doc</button>
+</div></nav>
+
+<main>
+<!-- RUN -->
+<section class="pane" id="p-run" role="tabpanel" aria-labelledby="t-run">
+  <div class="box panel intro" data-intro><span><b>Run.</b> Both engines below are the same WebAssembly file running in your browser. One keyword decides the solver. Pick a model or load your own, change the mesh, and compare stock DYNWAVE with RASPIPE on any conduit or node.</span><button>Hide</button></div>
+  <div class="grid" id="drop">
+    <aside class="card">
+      <div class="ctl"><label for="preset">Reproduce a published case</label><select id="preset"><option value="">Choose a case</option></select><small id="presetNote">Sets the model and every control below, then runs.</small></div>
+      <div class="ctl"><label for="model">Model</label><select id="model"></select><small id="modelNote"></small></div>
+      <div class="ctl"><label for="file">Or load your own .inp</label><input type="file" id="file" accept=".inp,.INP,.txt"><small>Drop a file anywhere on this tab. It stays in your browser.</small></div>
+      <div class="ctl"><span class="lbl">Equations</span><div class="seg" id="eqn" role="group" aria-label="Equation set"><button data-v="DW" class="on">Diffusion wave</button><button data-v="SWE">Full shallow water</button></div><small>Diffusion wave is what HEC's SWMM import tutorial selects.</small></div>
+      <div class="ctl"><label for="cell">Cell length <output id="cellO"></output></label><input type="range" id="cell" min="0" max="6" step="1" value="3"><small>Target length in model units (ft or m). Short conduits get at least one interior cell.</small></div>
+      <div class="ctl"><label for="maxc">Most cells per conduit <output id="maxcO"></output></label><input type="range" id="maxc" min="0" max="8" step="1" value="3"><small>The panel above the chart says what the mesh came to, and warns if this limit stopped a conduit reaching the cell length.</small></div>
+      <div class="ctl"><label for="theta">Implicit weighting &theta; <output id="thetaO"></output></label><input type="range" id="theta" min="0.5" max="1" step="0.05" value="1"></div>
+      <div class="ctl"><label for="cour">Target Courant <output id="courO"></output></label><input type="range" id="cour" min="0" max="2" step="0.1" value="0.9"><small>HEC's default is 0.9. RASPIPE runs as many pipe steps inside a routing step as this needs. 0 turns it off.</small></div>
+      <div class="ctl"><label for="warm">Warm up steps <output id="warmO"></output></label><input type="range" id="warm" min="0" max="120" step="10" value="0"><small>Inflows ramp over the first 2/3, before the clock starts. HEC asks for 30 or more.</small></div>
+      <div class="ctl"><span class="lbl">Project outfall stage at the start</span><div class="seg" id="stg" role="group" aria-label="Project outfall stage"><button data-v="YES" class="on">Yes</button><button data-v="NO">No</button></div></div>
+      <div class="ctl"><label for="dt">Routing step</label><select id="dt"><option value="">As in the model</option><option>1</option><option>5</option><option>15</option><option>30</option><option>60</option></select><small>Applies to RASPIPE only. With VARIABLE_STEP on, the step stays at 15 s or less while water is moving, and stretches to ROUTING_STEP when the Courant target allows it.</small></div>
+      <div class="ctl"><label for="vs">Variable step</label><select id="vs"><option value="">As in the model</option><option value="0">0 (off)</option><option value="0.75">0.75</option></select><small>Applies to RASPIPE only. Off holds the routing step you asked for, which is what a time step study needs.</small></div>
+      <button class="primary" id="runBtn">Run both engines</button>
+      <div class="row" style="margin-top:8px"><button class="ghost" id="stopBtn" hidden>Stop</button><button class="ghost" id="inpBtn">Save the .inp of this run</button></div>
+      <div class="row" style="margin-top:8px"><span class="chip ok" id="badge" hidden></span></div>
+      <div class="status" id="status" aria-live="polite"></div>
+    </aside>
+    <div class="stack">
+      <div class="box panel" id="rec" hidden></div>
+      <div class="box warn" id="stale" hidden></div>
+      <div class="box warn" id="meshWarn" hidden>Cell limit reached: the requested spacing was not achieved. Raise Most cells per conduit, or read the cell lengths above as what this run really used.</div>
+      <div class="tiles" id="tiles"></div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <h3 id="chartT">Results</h3>
+          <div class="row" style="flex:1 1 260px;justify-content:flex-end">
+            <select id="vari" aria-label="Variable" style="width:auto"><option value="flow">Conduit flow</option><option value="depth">Node depth</option><option value="head">Node head</option><option value="vol">Conduit volume</option></select>
+            <select id="elem" aria-label="Element" style="width:auto;max-width:180px"></select>
+          </div>
+        </div>
+        <svg class="chart" id="chart" viewBox="0 0 800 340" role="img" aria-label="Hydrograph comparing the two solvers"></svg>
+        <div class="legend"><span><i style="background:var(--s1)"></i>EPA 5.2.4 DYNWAVE</span><span><i style="background:var(--s2)"></i>RASPIPE</span></div>
+      </div>
+      <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Largest differences in peak link flow</h3><button class="ghost" id="peakCsv">Export this table</button></div><div class="tw"><table id="diffT"></table></div><p class="status" id="diffN"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section class="pane" id="p-prof" role="tabpanel" aria-labelledby="t-prof" hidden>
+  <div class="box panel intro" data-intro><span><b>Profile.</b> A hydrograph shows when two engines differ. This shows where. Pick two nodes and a moment in the run, and read the hydraulic grade line of each engine against the pipe. Blue arrows are RASPIPE's flow direction, amber are EPA's. A line that runs above the crown is a pipe under pressure.</span><button>Hide</button></div>
+  <div class="box warn" id="pNone">Run a model on the Run tab first.</div>
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <label class="lbl" for="pFrom" style="flex:1 1 140px;display:block">From node<select id="pFrom"></select></label>
+      <label class="lbl" for="pTo" style="flex:1 1 140px;display:block">To node<select id="pTo"></select></label>
+      <button class="ghost" id="pPlay" style="align-self:flex-end">Play</button>
+    </div>
+    <div class="ctl"><label for="pTime">Time <output id="pTimeO"></output></label><input type="range" id="pTime" min="0" max="1" step="1" value="0"></div>
+    <svg class="chart" id="pchart" viewBox="0 0 800 380" role="img" aria-label="Longitudinal profile of the pipes between two nodes with the hydraulic grade line of each engine"></svg>
+    <div class="legend"><span><i style="background:var(--s1)"></i>EPA 5.2.4 hydraulic grade line</span><span><i style="background:var(--s2)"></i>RASPIPE hydraulic grade line</span><span><i style="background:var(--axis)"></i>Pipe and manhole</span><span><i style="background:var(--grid)"></i>Cell boundaries</span></div>
+    <p class="status">The <code>.out</code> file holds heads at nodes, not cells, so each grade line is straight between nodes. Cell boundaries are worked out from this run's settings, and are drawn only where they are at least 3 pixels apart. The time slider starts at the busiest report period.</p>
+  </div>
+  <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Nodes on this path</h3><button class="ghost" id="pCsv">Export this profile</button></div><div class="tw"><table id="pT"></table></div></div>
+</section>
+
+<!-- CELL -->
+<section class="pane" id="p-cell" role="tabpanel" aria-labelledby="t-cell" hidden>
+  <div class="box panel intro" data-intro><span><b>Inside a cell.</b> This is the idea that replaces the slot. A closed pipe cell holds a fixed amount of water, so its volume table goes flat at the crown. Move the sliders and watch the slope of that table split into a rising part and a falling part, then race plain Newton against nested Newton on the same equation.</span><button>Hide</button></div>
+  <div class="grid">
+    <aside class="card">
+      <div class="ctl"><label for="cD">Pipe diameter <output id="cDO"></output></label><input type="range" id="cD" min="0.5" max="8" step="0.25" value="3"></div>
+      <div class="ctl"><label for="cL">Cell length <output id="cLO"></output></label><input type="range" id="cL" min="10" max="400" step="10" value="100"></div>
+      <div class="ctl"><label for="cS">Pipe slope <output id="cSO"></output></label><input type="range" id="cS" min="0" max="0.05" step="0.001" value="0.005"></div>
+      <h3 style="margin:12px 0 8px">Newton race</h3>
+      <div class="ctl"><label for="cF">Water to place <output id="cFO"></output></label><input type="range" id="cF" min="0" max="1" step="0.01" value="0.75"><small>Fraction of the full cell volume.</small></div>
+      <div class="ctl"><label for="cW">Coupling to the next cell <output id="cWO"></output></label><input type="range" id="cW" min="-2" max="3" step="0.1" value="-1"><small>dt&middot;&theta;&middot;conveyance, ft&sup2;. Small means the cell is nearly on its own.</small></div>
+      <div class="ctl"><label for="cH">Starting level above invert <output id="cHO"></output></label><input type="range" id="cH" min="0" max="3" step="0.05" value="1.6"><small>In pipe diameters. Above 1 the cell starts under pressure.</small></div>
+    </aside>
+    <div class="stack">
+      <div class="card"><h3>Storage derivative of the cell, dV/d&eta; (ft&sup2;)</h3>
+        <svg class="chart" id="tchart" viewBox="0 0 800 300" role="img" aria-label="Storage derivative of the cell against water level, with its rising and falling parts"></svg>
+        <div class="legend"><span><i style="background:var(--s2)"></i>T = dV/d&eta;: plan area of the water surface in the cell</span><span><i style="background:var(--s3)"></i>T1: running sum of the rises</span><span><i style="background:var(--s4)"></i>T2: running sum of the falls</span></div>
+        <p class="status">T has units of area: volume per foot of level, or a width times the cell length. V = V1 &minus; V2, and both pieces curve upward. That shape is what the nested iteration is built on, and Casulli and Zanolli's convergence proof applies to their algorithm under their assumptions. A solver that changes the loop has to show its own evidence. Above the crown T1 = T2, so V stops growing and the level there is simply crown + P/&gamma;.</p>
+      </div>
+      <div class="card"><h3>Solve V(&eta;) + W(&eta; &minus; h) = b, one cell</h3>
+        <svg class="chart" id="nchart" viewBox="0 0 800 260" role="img" aria-label="Level against iteration for plain and nested Newton"></svg>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Plain Newton</span><span><i style="background:var(--s2)"></i>Nested Newton</span></div>
+        <p class="status" id="nnote"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VERIFY -->
+<section class="pane" id="p-verify" role="tabpanel" aria-labelledby="t-verify" hidden>
+  <div class="box panel intro" data-intro><span><b>Verify.</b> Every number here came from a run of this engine on a native build, with the scripts and decks in the engine zip. Each test says what kind of evidence it is, because a closed-form answer, a second solver and a start-up check do not prove the same thing.</span><button>Hide</button></div>
+  <div class="box ok" id="vHead"></div>
+  <div class="tiles four" id="mT"></div>
+  <div class="card"><h3>Three benchmarks set from outside this project</h3>
+    <p class="status">The first two have answers on paper that no one here wrote. The third is scored against a solver from the same AI session, and it is labeled that way.</p>
+    <h4>Stoker's dam break: 10 ft of water behind a gate, 2 ft in front</h4>
+    <svg class="chart" id="stchart" viewBox="0 0 800 300" role="img" aria-label="Depth along the pipe 60 seconds after the gate lifts, the exact solution against two versions of the solver"></svg>
+    <div class="legend"><span><i style="background:var(--s3)"></i>Exact</span><span><i style="background:var(--s1)"></i>v1.1 implicit upwind, &theta; 1</span><span><i style="background:var(--s5)"></i>v1.2, &theta; 1</span><span><i style="background:var(--s2)"></i>v1.2, &theta; 0.6</span></div>
+    <div class="tw" style="margin-top:8px"><table id="stT"></table></div><p class="status" id="stN"></p>
+    <h4>U-tube: two tanks and a frictionless pipe</h4>
+    <svg class="chart" id="utchart" viewBox="0 0 800 280" role="img" aria-label="Tank level against time, the exact undamped oscillation against EPA and RASPIPE"></svg>
+    <div class="legend"><span><i style="background:var(--s3)"></i>Exact, no losses</span><span><i style="background:var(--s1)"></i>EPA 5.2.4 EXTRAN, 2 s</span><span><i style="background:var(--s2)"></i>RASPIPE full equations, &theta; 0.6, 2 s</span></div>
+    <div class="tw" style="margin-top:8px"><table id="utT"></table></div><p class="status" id="utN"></p>
+    <h4>A wave down an 8,000 ft pipe: flow 6,000 ft from the inlet, one cause at a time</h4>
+    <svg class="chart" id="wchart" viewBox="0 0 800 320" role="img" aria-label="Flow against time for four solutions of the same pipe"></svg>
+    <div class="legend" id="wleg"></div>
+    <div class="tw" style="margin-top:8px"><table id="wT"></table></div>
+    <p class="status" id="wNote"></p>
+  </div>
+  <div class="card"><h3>How RASPIPE compares with the HEC method</h3><div class="tw"><table id="mtT"></table></div></div>
+  <div class="card"><h3>Every test, and what kind of evidence it is</h3><div class="tw"><table id="vT"></table></div></div>
+  <div class="card"><h3>Corpus sweep</h3><p class="status" id="sNote"></p>
+    <h4>What happened to every model</h4><div class="tw"><table id="oT"></table></div>
+    <h4>Routing continuity, the models both engines finished</h4>
+    <svg class="chart" id="schart" viewBox="0 0 800 280" role="img" aria-label="Number of models in each band of routing continuity error, for each engine"></svg>
+    <div class="legend"><span><i style="background:var(--s1)"></i>EPA 5.2.4 DYNWAVE</span><span><i style="background:var(--s2)"></i>RASPIPE</span></div>
+    <div class="tw" style="margin-top:8px"><table id="sT"></table></div>
+    <h4>The models with an unsolved step</h4><div class="tw"><table id="uT"></table></div><p class="status" id="uN"></p>
+    <h4>A sample with the full equations</h4><div class="tw"><table id="sweT"></table></div><p class="status" id="sweN"></p>
+    <h4>What the sample contains</h4><div class="tw"><table id="cT"></table></div>
+  </div>
+  <div class="card"><h3>Defect register</h3><div class="tw"><table id="dT"></table></div></div>
+  <div class="box hi" id="vLimits"></div>
+</section>
+
+
+<!-- ABOUT -->
+<section class="pane" id="p-about" role="tabpanel" aria-labelledby="t-about" hidden>
+  <div class="grid">
+    <div class="stack">
+      <div class="card"><h3>What this is</h3><p>A fork of EPA SWMM 5.2.4 with one new source file, <code>raspipe.c</code>, about 2,500 lines. It replaces the explicit link and node update of dynamic wave routing with a semi-implicit finite volume solve over a mesh of pipe cells. Hydrology, controls, statistics and the <code>.out</code> format are EPA's. Quality routing is EPA's with one change: it is told the flow at each end of a conduit.</p></div>
+      <div class="card"><h3>What changed in 1.2</h3><ul style="margin:0;padding-left:18px;line-height:1.6">
+        <li>The full equations now use HEC's Eulerian-Lagrangian advection, and momentum crosses a junction of two conduits. Diffusion wave is unchanged, byte for byte.</li>
+        <li>Three outside benchmarks: Stoker's dam break, a U-tube, and the wave scored one cause at a time.</li>
+        <li>A finished run is one record. The chart, the CSV and the saved .inp all read it, and the app says when the controls have moved on.</li>
+        <li>The report and the app give the mesh achieved, the pipe steps, the largest Courant number and the build.</li>
+        <li>A Profile tab, cases that reproduce the published numbers, and a label on every test saying what kind of evidence it is.</li>
+      </ul></div>
+      <div class="box hi"><b>Not HEC-RAS.</b> This is an independent implementation written from HEC's public manuals and the journal papers they cite. It contains no HEC-RAS code, and it has not been compared with a run of HEC-RAS. The Hydrologic Engineering Center and the U.S. Army Corps of Engineers did not make, review or endorse it.</div>
+      <div class="card"><h3>Sources</h3><ul id="srcs" style="margin:0;padding-left:18px;font-size:13px;line-height:1.6"></ul></div>
+    </div>
+    <div class="stack">
+      <div class="card"><h3>Turn it on</h3>
+        <p style="margin-bottom:8px">One word in <code>[OPTIONS]</code>. Without it the engine is EPA 5.2.4, byte for byte.</p>
+        <pre style="background:var(--code-bg);color:var(--code-ink);padding:10px 12px;border-radius:8px;overflow-x:auto;font:13px var(--mono);margin:0 0 12px">FLOW_ROUTING          RASPIPE
+RASPIPE_EQUATIONS     DW      ; DW or SWE
+RASPIPE_CELL_LENGTH   100     ; ft or m
+RASPIPE_MAX_CELLS     20
+RASPIPE_THETA         1.0     ; 0.5 to 1.0
+RASPIPE_COURANT       0.9     ; 0 = off
+RASPIPE_INITIAL_STAGE YES
+RASPIPE_WARMUP        0       ; steps, 30 or more
+RASPIPE_NESTED_ONLY   NO      ; for testing</pre>
+        <div class="tw"><table id="optT"></table></div>
+      </div>
+      <div class="card"><h3>AI use</h3><div id="aiuse" style="font-size:15px;display:flex;flex-direction:column;gap:8px"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOC -->
+<section class="pane" id="p-doc" role="tabpanel" aria-labelledby="t-doc" hidden>
+  <div class="doc card" style="padding:20px 24px">
+    <div class="row" style="justify-content:space-between"><span class="status" style="margin:0">The same write-up ships as a Word document.</span><button class="ghost" id="docxBtn">Download the .docx</button></div>
+    <!--@@DOC@@-->
+  </div>
+</section>
+</main>
+<footer class="prov" id="prov"></footer>
+
+<div class="modal" id="help" role="dialog" aria-modal="true" aria-labelledby="helpT" hidden><div>
+  <h2 id="helpT">How to use SWMM5 RASPIPE</h2>
+  <ol>
+    <li><b>Run a model.</b> A sample has already run. Pick another in the Model list or load your own <code>.inp</code>.</li>
+    <li><b>Change the mesh.</b> Move Cell length and press Run. Long pipes show the biggest change. Target Courant, Warm up and Project stage are the HEC-RAS time step and start-up options.</li>
+    <li><b>Read the two lines.</b> Amber is EPA 5.2.4, blue is RASPIPE. Choose any conduit or node above the chart, or open Profile to see both grade lines between any two nodes at any moment.</li>
+    <li><b>Look inside a cell.</b> That tab shows how a pipe pressurizes without a slot.</li>
+    <li><b>Check the claims.</b> Verify lists each test, the kind of evidence it is, what was expected and what came out. Reproduce a published case sets every control for you.</li>
+    <li><b>Take it with you.</b> Export CSV and Save the .inp of this run both come from the run shown, whatever the controls say now.</li>
+    <li><b>Come back here</b> with the <b>?</b> button in the header.</li>
+  </ol>
+  <button class="primary" id="helpClose">Start</button>
+</div></div>
+
+<script>
+'use strict';
+const VERSION='1.2';
+const DATA=/*@@DATA@@*/null;
+const SAMPLES=/*@@SAMPLES@@*/[];
+const WASM_B64='/*@@WASM@@*/';
+const DOCX_B64='/*@@DOCX@@*/';
+const SHIM_SRC=/*@@SHIM@@*/'';
+const $=id=>document.getElementById(id);
+const fmt=(x,n=3)=>{if(x==null||!isFinite(x))return '–';const a=Math.abs(x);if(a>0&&a<Math.pow(10,-n)/2)return n>=3?Number(x).toExponential(1):'0';return Number(x).toLocaleString('en-US',{maximumFractionDigits:n,minimumFractionDigits:0});};
+
+/* ---------- theme ---------- */
+let themePref='dark';
+function applyTheme(p){themePref=(p==='light'||p==='auto')?p:'dark';
+  const dark=themePref==='dark'||(themePref==='auto'&&(!window.matchMedia||matchMedia('(prefers-color-scheme: dark)').matches));
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  document.querySelectorAll('#theme-toggle button').forEach(b=>b.classList.toggle('on',b.dataset.t===themePref));
+  try{localStorage.setItem('raspipe_theme',themePref);}catch(e){}}
+document.querySelectorAll('#theme-toggle button').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.t)));
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themePref==='auto')applyTheme('auto');});}catch(e){}
+(function(){let p='dark';try{const v=localStorage.getItem('raspipe_theme');if(v==='light'||v==='auto'||v==='dark')p=v;}catch(e){}applyTheme(p);})();
+
+/* ---------- tabs, help, intro ---------- */
+const TABS=['run','prof','cell','verify','about','doc'];
+function showTab(id){TABS.forEach(t=>{const on=t===id;$('t-'+t).setAttribute('aria-selected',on);$('p-'+t).hidden=!on;});
+  if(id==='cell')drawCell();if(id==='verify')drawVerify();if(id==='prof')profDraw();window.scrollTo(0,0);}
+TABS.forEach(t=>$('t-'+t).addEventListener('click',()=>showTab(t)));
+document.querySelector('.tabs-in').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  const i=TABS.findIndex(t=>$('t-'+t).getAttribute('aria-selected')==='true');const n=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;showTab(TABS[n]);$('t-'+TABS[n]).focus();});
+document.querySelectorAll('[data-intro] button').forEach(b=>b.addEventListener('click',()=>{b.closest('[data-intro]').hidden=true;}));
+function openHelp(){$('help').hidden=false;$('helpClose').focus();}
+function closeHelp(){$('help').hidden=true;$('helpBtn').focus();}
+$('helpBtn').addEventListener('click',openHelp);$('helpClose').addEventListener('click',closeHelp);
+$('help').addEventListener('keydown',e=>{if(e.key==='Escape')closeHelp();});
+$('help').addEventListener('click',e=>{if(e.target===$('help'))closeHelp();});
+
+/* ---------- saving files ---------- */
+async function saveFile(name,blob){
+  try{ if(window.claude&&window.claude.use){const d=await window.claude.use('downloads');
+      if(d){const data=new Uint8Array(await blob.arrayBuffer());await d.save({filename:name,data});setStatus('Saved '+name+'.');return;}}
+  }catch(e){if(e&&e.code==='declined'){setStatus('Save declined.');return;}setStatus('Could not save: '+((e&&e.message)||e));return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);setStatus('Saved '+name+'.');}
+function setStatus(t){$('status').textContent=t;}
+function b64bytes(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+
+/* ---------- engine: one function, used by the worker and by the fallback ---------- */
+async function runWasm(mod,inp,shim){const {WASI,File,OpenFile,ConsoleStdout,PreopenDirectory}=shim;
+  const root=new PreopenDirectory('/',new Map([['m.inp',new File(new TextEncoder().encode(inp))]]));
+  const fds=[new OpenFile(new File([])),ConsoleStdout.lineBuffered(()=>{}),ConsoleStdout.lineBuffered(()=>{}),root];
+  const w=new WASI(['swmm5','/m.inp','/m.rpt','/m.out'],[],fds,{debug:false});
+  const inst=await WebAssembly.instantiate(mod,{wasi_snapshot_preview1:w.wasiImport});
+  const t0=performance.now();let rc=0,err=null;
+  try{rc=w.start(inst);}catch(x){rc=-1;err=String(x&&x.message||x);}
+  const ms=performance.now()-t0;
+  const rf=root.dir.contents.get('m.rpt'),of=root.dir.contents.get('m.out');
+  const rpt=rf?new TextDecoder().decode(rf.data):'';const out=of&&of.data.length?of.data.slice().buffer:null;
+  return {rc,ms,rpt,out,err};}
+const WORKER_SRC=SHIM_SRC+';'+runWasm.toString()+`;
+let mod=null;
+self.onmessage=async e=>{const {wasm,inp,id}=e.data;
+  try{if(!mod)mod=await WebAssembly.compile(wasm);const r=await runWasm(mod,inp,wasiShim);r.id=id;self.postMessage(r,r.out?[r.out]:[]);}
+  catch(x){self.postMessage({id,rc:-2,err:String(x&&x.message||x)});}};`;
+let worker=null,wasmBytes=null,jobId=0,noWorker=false,mainShim=null,mainMod=null;const pending=new Map();
+async function runMain(inp){if(!mainShim)mainShim=(new Function(SHIM_SRC+';return wasiShim;'))();if(!mainMod)mainMod=await WebAssembly.compile(wasmBytes);
+  setStatus('This preview blocks background workers, so the engine runs on the page itself. The page will not respond until it finishes.');await new Promise(r=>setTimeout(r,40));return runWasm(mainMod,inp,mainShim);}
+function getWorker(){if(!worker){worker=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})));
+    worker.onmessage=e=>{const p=pending.get(e.data.id);if(p){pending.delete(e.data.id);p.res(e.data);}};
+    worker.onerror=()=>{const l=[...pending.values()];pending.clear();worker=null;noWorker=true;l.forEach(p=>runMain(p.inp).then(p.res,p.rej));};}
+  return worker;}
+function runEngine(inp){if(!wasmBytes)wasmBytes=b64bytes(WASM_B64);if(noWorker)return runMain(inp);
+  let w;try{w=getWorker();}catch(e){noWorker=true;return runMain(inp);}
+  return new Promise((res,rej)=>{const id=++jobId;pending.set(id,{res,rej,inp});w.postMessage({wasm:wasmBytes,inp,id});});}
+function cancelEngine(){if(worker){worker.terminate();worker=null;}const l=[...pending.values()];pending.clear();l.forEach(p=>{const e=new Error('cancelled');e.cancelled=true;p.rej(e);});}
+
+/* ---------- .inp editing ---------- */
+function setOption(s,key,val){const re=new RegExp('^[ \\t]*'+key+'[ \\t]+\\S.*$','mi');
+  if(re.test(s))return s.replace(re,key+'  '+val);
+  return s.replace(/^\s*\[OPTIONS\][^\n]*\n/mi,m=>m+key+'  '+val+'\n');}
+function dropOptions(s){return s.replace(/^[ \t]*RASPIPE_[A-Z_]+[ \t].*\r?\n/gmi,'');}
+function deckStock(s){s=dropOptions(s);return setOption(s,'FLOW_ROUTING','DYNWAVE');}
+function deckRas(s,o){s=dropOptions(s);s=setOption(s,'FLOW_ROUTING','RASPIPE');
+  s=s.replace(/^\s*\[OPTIONS\][^\n]*\n/mi,m=>m+`RASPIPE_EQUATIONS  ${o.eqn}\nRASPIPE_CELL_LENGTH  ${o.cell}\nRASPIPE_MAX_CELLS  ${o.maxc}\nRASPIPE_THETA  ${o.theta}\nRASPIPE_COURANT  ${o.cour}\nRASPIPE_WARMUP  ${o.warm}\nRASPIPE_INITIAL_STAGE  ${o.stg}\n`);
+  if(o.dt)s=setOption(s,'ROUTING_STEP',o.dt);if(o.vs!=='')s=setOption(s,'VARIABLE_STEP',o.vs);return s;}
+
+/* ---------- results readers ---------- */
+function readOut(buf){const n=buf?buf.byteLength:0;if(n<60)throw new Error('The output file is empty.');
+  const dv=new DataView(buf),I=o=>dv.getInt32(o,true);
+  const idp=I(n-24),objp=I(n-20),resp=I(n-16),nper=I(n-12),ecode=I(n-8),magic=I(n-4);
+  if(magic!==I(0))throw new Error('The output file is incomplete.');
+  const nS=I(12),nN=I(16),nL=I(20),nP=I(24);const dec=new TextDecoder();
+  let p=idp;const names=[];for(let i=0;i<nS+nN+nL+nP;i++){const k=I(p);names.push(dec.decode(new Uint8Array(buf,p+4,k)));p+=4+k;}
+  const N=names.slice(nS,nS+nN),L=names.slice(nS+nN,nS+nN+nL);
+  let q=objp,k=I(q);q+=4*(1+k)+4*k*nS;k=I(q);q+=4*(1+k)+4*k*nN;k=I(q);q+=4*(1+k)+4*k*nL;
+  const nv=[];for(let i=0;i<4;i++){k=I(q);nv.push(k);q+=4*(1+k);}
+  const [ns,nn,nl,nsys]=nv,rec=8+4*(ns*nS+nn*nN+nl*nL+nsys),rstep=I(resp-4),start=dv.getFloat64(resp-12,true);
+  const days=new Float64Array(nper);for(let r=0;r<nper;r++)days[r]=dv.getFloat64(resp+r*rec,true);
+  const hours=Float64Array.from(days,d=>(d-start)*24);
+  const F=(r,o)=>dv.getFloat32(resp+r*rec+o,true);const o0=8+4*ns*nS,o1=o0+4*nn*nN;
+  return {N,L,nper,rstep,ecode,start,days,hours,node:(j,v)=>{const a=new Float64Array(nper),o=o0+4*(j*nn+v);for(let r=0;r<nper;r++)a[r]=F(r,o);return a;},
+    link:(j,v)=>{const a=new Float64Array(nper),o=o1+4*(j*nl+v);for(let r=0;r<nper;r++)a[r]=F(r,o);return a;}};}
+function readRpt(t){const g=re=>{const m=t.match(re);return m?m[1]:null;},gn=re=>{const v=g(re);return v==null?null:parseFloat(v);};
+  const blk=(t.split('Flow Routing Continuity')[1]||'');const b=re=>{const m=blk.match(re);return m?parseFloat(m[1]):null;};
+  const units=(blk.split('\n')[0]||'').includes('hectare')?'ha-m':'ac-ft';
+  const len=t.match(/Cell length achieved \.+ min ([\d.]+), median ([\d.]+), max ([\d.]+)/),dts=t.match(/Pipe step \(sec\) \.+ min ([\d.]+), mean ([\d.]+), max ([\d.]+)/),cap=t.match(/Conduits at cell limit \.+ (\d+) of (\d+) \(limit (\d+)\)/);
+  return {cont:b(/Continuity Error \(%\) \.+\s+(-?[\d.]+)/),flood:b(/Flooding Loss \.+\s+([\d.]+)/),out:b(/External Outflow \.+\s+([\d.]+)/),units,
+    errs:(t.match(/ERROR \d+:[^\n]*/g)||[]).slice(0,3),trials:gn(/Trials per step \.+ ([\d.]+)/),fact:gn(/Factorizations per step \. ([\d.]+)/),
+    nested:gn(/Nested Newton solves \.+ ([\d.]+)/),cells:g(/Cells \/ faces \.+ ([\d]+ \/ [\d]+)/),sub:gn(/Pipe steps per routing step ([\d.]+)/),
+    build:g(/Version \.+ (.+)/),engine:g(/VERSION ([\d.]+ \(Build [\d.]+\))/),len:len?len.slice(1,4).map(Number):null,dts:dts?dts.slice(1,4).map(Number):null,cap:cap?cap.slice(1,4).map(Number):null,
+    cr:gn(/Largest Courant reached \. ([\d.]+)/),unsolved:gn(/Steps left unsolved \.+ (\d+)/),unconv:gn(/Unconverged nested solves (\d+)/),res:gn(/Largest volume residual \. ([\d.e+-]+)/),nonconv:gn(/% of Steps Not Converging\s*:\s*([\d.]+)/)};}
+function rptStart(t){const m=t.match(/Starting Date \.+ (\S+)\s+(\d+):(\d+):(\d+)/);if(!m)return null;let y,mo,d;const a=m[1].match(/^(\d+)\/(\d+)\/(\d+)$/),b=m[1].match(/^([A-Za-z]{3})-(\d+)-(\d+)$/);
+  if(a){mo=+a[1];d=+a[2];y=+a[3];}else if(b){mo='JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.indexOf(b[1].toUpperCase())/3+1;d=+b[2];y=+b[3];}else return null;
+  return (Date.UTC(y,mo-1,d,+m[2],+m[3],+m[4])-Date.UTC(1899,11,30))/864e5;}
+function parseInp(s){const S={};let cur=null;s.split(/\r?\n/).forEach(l=>{const t=l.trim();if(!t||t[0]===';')return;const m=t.match(/^\[(.+?)\]/);if(m){cur=m[1].toUpperCase();return;}if(cur)(S[cur]=S[cur]||[]).push(t.split(/\s+/));});return S;}
+function topology(inp){const S=parseInp(inp),nodes=new Map(),links=new Map(),byElev=/^\s*LINK_OFFSETS\s+ELEVATION/mi.test(inp);
+  (S.JUNCTIONS||[]).forEach(c=>nodes.set(c[0],{id:c[0],inv:+c[1],max:+c[2]||0,kind:'junction'}));
+  (S.OUTFALLS||[]).forEach(c=>nodes.set(c[0],{id:c[0],inv:+c[1],max:0,kind:'outfall'}));
+  (S.STORAGE||[]).forEach(c=>nodes.set(c[0],{id:c[0],inv:+c[1],max:+c[2]||0,kind:'storage'}));
+  (S.DIVIDERS||[]).forEach(c=>nodes.set(c[0],{id:c[0],inv:+c[1],max:0,kind:'divider'}));
+  const off=(v,n)=>{if(v==null||v==='*')return 0;const x=parseFloat(v)||0,o=nodes.get(n);return byElev&&o?x-o.inv:x;};
+  (S.CONDUITS||[]).forEach(c=>links.set(c[0],{id:c[0],a:c[1],b:c[2],len:+c[3]||0,off1:off(c[5],c[1]),off2:off(c[6],c[2]),kind:'conduit'}));
+  [['PUMPS','pump'],['ORIFICES','orifice'],['WEIRS','weir'],['OUTLETS','outlet']].forEach(([k,n])=>(S[k]||[]).forEach(c=>links.set(c[0],{id:c[0],a:c[1],b:c[2],len:0,off1:0,off2:0,kind:n})));
+  (S.XSECTIONS||[]).forEach(c=>{const l=links.get(c[0]);if(l&&l.kind==='conduit'){l.shape=(c[1]||'').toUpperCase();l.h=parseFloat(c[2])||0;l.barrels=+c[6]||1;}});
+  const adj=new Map();nodes.forEach((v,k)=>adj.set(k,[]));links.forEach(l=>{if(adj.has(l.a)&&adj.has(l.b)){adj.get(l.a).push([l.b,l,1]);adj.get(l.b).push([l.a,l,-1]);}});
+  return {nodes,links,adj};}
+function pathBetween(T,from,to){if(from===to||!T.adj.has(from)||!T.adj.has(to))return null;const prev=new Map([[from,null]]),q=[from];
+  for(let i=0;i<q.length;i++){const n=q[i];if(n===to)break;for(const [m,l,s] of T.adj.get(n))if(!prev.has(m)){prev.set(m,[n,l,s]);q.push(m);}}
+  if(!prev.has(to))return null;const out=[];for(let n=to;prev.get(n);n=prev.get(n)[0]){const p=prev.get(n);out.unshift({from:p[0],to:n,link:p[1],sense:p[2]});}return out;}
+function defaultPath(T){const ends=[...T.nodes.values()].filter(n=>n.kind==='outfall');if(!ends.length)return null;let best=null;
+  for(const e of ends.slice(0,8)){const dist=new Map([[e.id,0]]),q=[e.id];for(let i=0;i<q.length;i++){const n=q[i];for(const [m] of T.adj.get(n))if(!dist.has(m)){dist.set(m,dist.get(n)+1);q.push(m);}}
+    for(const [n,d] of dist)if(!best||d>best.d)best={from:n,to:e.id,d};}
+  return best&&best.d>0?best:null;}
+
+/* ---------- charts ---------- */
+function ticks(a,b,n){if(!(b>a))b=a+1;const s=(b-a)/n,m=Math.pow(10,Math.floor(Math.log10(s))),r=s/m,st=(r<1.5?1:r<3?2:r<7?5:10)*m,o=[];
+  for(let v=Math.ceil(a/st)*st;v<=b+st*1e-6;v+=st)o.push(+v.toFixed(10));return o;}
+function frame(svg,x0,x1,y0,y1,opt){const W=+svg.getAttribute('viewBox').split(' ')[2],H=+svg.getAttribute('viewBox').split(' ')[3];
+  const m={l:62,r:14,t:10,b:44},iw=W-m.l-m.r,ih=H-m.t-m.b,X=v=>m.l+(v-x0)/(x1-x0)*iw,Y=v=>m.t+ih-(v-y0)/(y1-y0)*ih;let h=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="var(--face)"/>`;
+  ticks(y0,y1,5).forEach(v=>{h+=`<line x1="${m.l}" x2="${m.l+iw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${m.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="var(--axis)" font-family="var(--mono)">${+v.toPrecision(6)}</text>`;});
+  ticks(x0,x1,7).forEach(v=>{h+=`<line y1="${m.t}" y2="${m.t+ih}" x1="${X(v)}" x2="${X(v)}" stroke="var(--grid)"/><text x="${X(v)}" y="${m.t+ih+16}" text-anchor="middle" font-size="12" fill="var(--axis)" font-family="var(--mono)">${+v.toPrecision(6)}</text>`;});
+  h+=`<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="none" stroke="var(--line)"/>`;
+  const tail=`<text x="${m.l+iw/2}" y="${H-6}" text-anchor="middle" font-size="13" fill="var(--axis)">${opt.xl||''}</text><text transform="translate(14 ${m.t+ih/2}) rotate(-90)" text-anchor="middle" font-size="13" fill="var(--axis)">${opt.yl||''}</text>`;
+  return {X,Y,m,iw,ih,h,tail};}
+function plot(svg,series,opt){let x0=1e300,x1=-1e300,y0=1e300,y1=-1e300;
+  series.forEach(s=>{for(let i=0;i<s.x.length;i++){const a=s.x[i],b=s.y[i];if(!isFinite(b))continue;if(a<x0)x0=a;if(a>x1)x1=a;if(b<y0)y0=b;if(b>y1)y1=b;}});
+  if(!(x1>x0)){x0=0;x1=1;}if(opt.yMin!=null)y0=opt.yMin;if(!(y1>y0)){y1=y0+1;}const pad=(y1-y0)*.06;if(opt.yMin==null)y0-=pad;y1+=pad;
+  const F=frame(svg,x0,x1,y0,y1,opt),{X,Y}=F;let h=F.h;
+  series.forEach(s=>{let d='',pen=false;const st=Math.max(1,Math.floor(s.x.length/1600));for(let i=0;i<s.x.length;i+=st){const b=s.y[i];if(!isFinite(b)){pen=false;continue;}d+=(pen?'L':'M')+X(s.x[i]).toFixed(1)+' '+Y(b).toFixed(1);pen=true;}
+    h+=`<path d="${d}" fill="none" stroke="var(--${s.c})" stroke-width="${s.w||2}"${s.dash?` stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round"/>`;
+    if(s.pts){for(let i=0;i<s.x.length;i++)h+=`<circle cx="${X(s.x[i]).toFixed(1)}" cy="${Y(s.y[i]).toFixed(1)}" r="3.5" fill="var(--${s.c})"/>`;}});
+  svg.innerHTML=h+F.tail;}
+
+/* ---------- Run tab: a finished comparison is one immutable record ---------- */
+const CELLS=[12.5,25,50,100,200,400,800],MAXC=[2,5,10,20,50,100,200,400,800];
+let current={name:'',inp:''},last=null,view={rows:[]},runSeq=0,running=false;
+const seg=id=>$(id).querySelector('.on').dataset.v;
+function opts(){return{eqn:seg('eqn'),cell:CELLS[+$('cell').value],maxc:MAXC[+$('maxc').value],theta:+$('theta').value,dt:$('dt').value,vs:$('vs').value,cour:+$('cour').value,warm:+$('warm').value,stg:seg('stg')};}
+function setSeg(id,v){$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));}
+function setOpts(o){setSeg('eqn',o.eqn);$('cell').value=CELLS.indexOf(o.cell);$('maxc').value=MAXC.indexOf(o.maxc);$('theta').value=o.theta;$('dt').value=o.dt;$('vs').value=o.vs;$('cour').value=o.cour;$('warm').value=o.warm;setSeg('stg',o.stg);refreshLabels();}
+const DEFAULTS={eqn:'DW',cell:100,maxc:20,theta:1,dt:'',vs:'',cour:.9,warm:0,stg:'YES'};
+function refreshLabels(){$('cellO').textContent=fmt(CELLS[+$('cell').value],1);$('maxcO').textContent=MAXC[+$('maxc').value];$('thetaO').textContent=(+$('theta').value).toFixed(2);$('courO').textContent=+$('cour').value===0?'off':(+$('cour').value).toFixed(1);$('warmO').textContent=+$('warm').value===0?'none':$('warm').value;staleCheck();}
+function staleCheck(){if(running)return;const s=!!(last&&(last.inp!==current.inp||JSON.stringify(last.o)!==JSON.stringify(opts())));$('stale').hidden=!s;if(s)$('stale').textContent='Settings changed. Rerun to update results. Everything below, and both exports, still belong to the run described above.';}
+['cell','maxc','theta','cour','warm'].forEach(i=>$(i).addEventListener('input',refreshLabels));['dt','vs'].forEach(i=>$(i).addEventListener('change',staleCheck));
+['eqn','stg'].forEach(g=>$(g).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$(g).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));staleCheck();})));
+SAMPLES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.name;$('model').appendChild(o);});
+(DATA.presets||[]).forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.label;$('preset').appendChild(o);});
+function pick(i){const s=SAMPLES[i];current={name:s.file,inp:s.inp,pick:s.pick};$('modelNote').textContent=s.note;run();}
+const PN='Sets the model and every control below, then runs.';
+$('model').addEventListener('change',e=>{$('preset').value='';$('presetNote').textContent=PN;pick(+e.target.value);});
+$('preset').addEventListener('change',e=>{const p=DATA.presets[+e.target.value];if(!p){$('presetNote').textContent=PN;return;}
+  setOpts({...DEFAULTS,...p.o});const i=SAMPLES.findIndex(s=>s.file===p.file);$('model').value=i;current={name:SAMPLES[i].file,inp:SAMPLES[i].inp,pick:p.elem||SAMPLES[i].pick};$('modelNote').textContent=SAMPLES[i].note;$('presetNote').textContent=p.note;$('vari').value=p.vari||'flow';run();});
+async function loadFile(f){if(!f)return;const t=await f.text();$('preset').value='';$('presetNote').textContent=PN;current={name:f.name,inp:t};$('modelNote').textContent=f.name+', '+fmt(t.length/1024,0)+' KB. Your own model, not a sample.';run();}
+$('file').addEventListener('change',e=>loadFile(e.target.files[0]));
+const dz=$('drop');['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
+dz.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
+$('runBtn').addEventListener('click',run);
+function setRunning(on,msg){running=on;$('runBtn').disabled=on;$('stopBtn').hidden=!on;if(on&&last){$('stale').hidden=false;$('stale').textContent='Running. The results below are from the previous run until this one finishes.';}if(!on)staleCheck();}
+$('stopBtn').addEventListener('click',()=>{runSeq++;cancelEngine();setRunning(false);setBadge('cancelled');setStatus(last?'Cancelled. The results below are from the earlier run named above them.':'Cancelled. There are no results to show.');});
+function setBadge(s){const m={completed:['ok','Completed'],warnings:['warn','Completed with convergence warnings'],failed:['warn','Failed'],cancelled:['hi','Cancelled'],running:['hi','Running']}[s];$('badge').className='chip '+m[0];$('badge').textContent=m[1];$('badge').hidden=false;}
+async function sha(s){try{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(d)).slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');}
+  catch(e){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return 'fnv'+(h>>>0).toString(16);}}
+function check(r,who){const fail=m=>{throw new Error(who+': '+m);};const rp=readRpt(r.rpt||'');if(r.err&&r.rc)fail(r.err);if(rp.errs.length)fail(rp.errs[0]);if(r.rc)fail('the engine stopped with exit code '+r.rc+'.');if(!r.out)fail('the engine wrote no results.');
+  let o;try{o=readOut(r.out);}catch(e){fail(e.message);}const st=rptStart(r.rpt);if(st!=null)o.hours=Float64Array.from(o.days,d=>(d-st)*24);if(o.ecode)fail('the results file carries error code '+o.ecode+'.');if(!o.nper)fail('the results file has no reporting periods.');return {o,rp};}
+async function run(){if(!current.inp)return;cancelEngine();const token=++runSeq,o=opts(),src=current;setRunning(true);setBadge('running');
+  try{const deckA=deckStock(src.inp),deckB=deckRas(src.inp,o);setStatus('Running EPA 5.2.4 DYNWAVE…');const a=await runEngine(deckA);if(token!==runSeq)return;
+    setStatus('Running RASPIPE…');const b=await runEngine(deckB);if(token!==runSeq)return;
+    const ca=check(a,'EPA 5.2.4'),cb=check(b,'RASPIPE');const warn=[];if(cb.rp.unsolved>0)warn.push(`RASPIPE left ${cb.rp.unsolved} step(s) unsolved, largest volume residual ${fmt(cb.rp.res,4)} ft³`);if(cb.rp.unconv>0)warn.push(`${fmt(cb.rp.unconv,0)} nested solve(s) stopped at their limit`);if(ca.rp.nonconv>0)warn.push(`EPA reports ${fmt(ca.rp.nonconv,2)}% of steps not converging`);
+    const status=warn.length?'warnings':'completed',hash=await sha(src.inp);if(token!==runSeq)return;
+    last=Object.freeze({id:token,name:src.name,inp:src.inp,hash,units:flowUnits(src.inp),o:Object.freeze({...o}),deckA,deckB,A:ca.o,B:cb.o,ra:ca.rp,rb:cb.rp,ms:[a.ms,b.ms],when:new Date().toISOString(),status,warn,pick:src.pick});
+    view={rows:[]};fillElems(true);render();setBadge(status);setStatus((status==='completed'?'Completed. ':'Completed with convergence warnings. ')+fmt(a.ms+b.ms,0)+' ms in your browser.');profInit();
+  }catch(e){if(token!==runSeq)return;if(e.cancelled){setBadge('cancelled');return;}last=null;renderEmpty(e.message);setBadge('failed');setStatus('Failed. '+e.message);}
+  finally{if(token===runSeq)setRunning(false);}}
+function renderEmpty(msg){$('tiles').innerHTML='';$('chart').innerHTML='';$('diffT').innerHTML='';$('rec').hidden=false;$('rec').innerHTML='<b>No results.</b> '+esc(msg||'')+' Nothing from the earlier run is shown.';$('meshWarn').hidden=true;$('stale').hidden=true;$('elem').innerHTML='';profClear();}
+function fillElems(fresh){const v=$('vari').value,l=(v==='flow'||v==='vol')?last.A.L:last.A.N,prev=$('elem').value,e=$('elem');const prevName=e.selectedOptions[0]?e.selectedOptions[0].textContent:null;e.innerHTML='';
+  l.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;e.appendChild(o);});
+  let idx=l.indexOf(prevName);const pref=last.pick;if((fresh||idx<0)&&pref&&l.indexOf(pref)>=0)idx=l.indexOf(pref);if(idx<0)idx=peakIndex(v);e.value=String(idx);}
+function peakIndex(v){if(!last)return 0;if(v==='flow'||v==='vol'){let b=0,bv=-1;last.A.L.forEach((n,j)=>{const a=last.A.link(j,0).reduce((m,x)=>Math.max(m,Math.abs(x)),0);if(a>bv){bv=a;b=j;}});return b;}return 0;}
+$('vari').addEventListener('change',()=>{if(last){fillElems();render();}});$('elem').addEventListener('change',()=>{if(last)render();});
+const LABEL={flow:'Flow',vol:'Volume',depth:'Depth',head:'Head'};
+const unitOf=(v,U)=>({flow:U.q,vol:U.v,depth:U.l,head:U.l}[v]);
+function series(){const v=$('vari').value,j=+$('elem').value,{A,B}=last;
+  const get=(R)=>v==='flow'?R.link(j,0):v==='vol'?R.link(j,3):v==='depth'?R.node(j,0):R.node(j,1);
+  return [{x:Array.from(A.hours),y:get(A),c:'s1',d:A.days},{x:Array.from(B.hours),y:get(B),c:'s2',d:B.days}];}
+function recordHTML(){const r=last,o=r.o,b=r.rb,U=r.units;
+  const ach=b.len?`${b.cells||''} cells / faces, cell length ${fmt(b.len[0],2)} / ${fmt(b.len[1],2)} / ${fmt(b.len[2],2)} ${U.l} (min / median / max), ${b.cap?b.cap[0]+' of '+b.cap[1]+' conduits at the limit of '+b.cap[2]:''}`:'';
+  return `<b>Run ${r.id}.</b> ${esc(r.name)}, ${U.q}, input ${r.hash}, finished ${r.when.replace('T',' ').slice(0,19)} UTC.<br><b>Asked for:</b> ${o.eqn==='SWE'?'full shallow water':'diffusion wave'}, cell ${fmt(o.cell,1)} ${U.l}, limit ${o.maxc}, &theta; ${o.theta.toFixed(2)}, Courant ${o.cour?o.cour:'off'}, warm up ${o.warm}, stage projection ${o.stg}, routing step ${o.dt?o.dt+' s':'as in the model'}, variable step ${o.vs===''?'as in the model':o.vs}.<br><b>Got:</b> ${ach}.<br><b>Engines:</b> RASPIPE ${esc(b.build||'')}, EPA ${esc(r.ra.engine||'5.2.4')}.${r.warn.length?'<br><b>Warnings:</b> '+esc(r.warn.join('; '))+'.':''}`;}
+function render(){if(!last)return;const {ra,rb,ms}=last,u=ra.units;
+  const pair=(a,b,d=3)=>`<div class="pair"><span class="v1">${fmt(a,d)}</span><span class="v2">${fmt(b,d)}</span></div>`;
+  $('rec').hidden=false;$('rec').innerHTML=recordHTML();$('meshWarn').hidden=!(rb.cap&&rb.cap[0]>0);
+  $('tiles').innerHTML=`<div class="tile"><b>Routing continuity</b>${pair(ra.cont,rb.cont)}<i>percent, EPA then RASPIPE</i></div>
+  <div class="tile"><b>Flooding</b>${pair(ra.flood,rb.flood)}<i>${u}</i></div><div class="tile"><b>Outflow</b>${pair(ra.out,rb.out)}<i>${u}</i></div>
+  <div class="tile"><b>Mesh achieved</b><div class="pair"><span class="v0">${rb.cells||'–'}</span></div><i>cells / faces, median ${rb.len?fmt(rb.len[1],1):'–'} ${last.units.l}</i></div>
+  <div class="tile"><b>Pipe steps per routing step</b><div class="pair"><span class="v0">${fmt(rb.sub,2)}</span></div><i>${rb.dts?`step ${fmt(rb.dts[0],2)} to ${fmt(rb.dts[2],2)} s, mean ${fmt(rb.dts[1],2)}; Courant reached ${fmt(rb.cr,2)}`:''}</i></div>
+  <div class="tile"><b>Run time</b>${pair(ms[0],ms[1],0)}<i>ms in this browser</i></div>`;
+  const s=series(),v=$('vari').value,U=last.units,name=LABEL[v]+' ('+unitOf(v,U)+')';
+  $('chartT').textContent=LABEL[v]+' at '+$('elem').selectedOptions[0].textContent;
+  plot($('chart'),s,{xl:'Hours from the start of the run',yl:name});
+  const T=last.topo||(view.topo=view.topo||topology(last.inp)),peak=R=>j=>{const a=R.link(j,0);let m=0;for(let k=0;k<a.length;k++)if(Math.abs(a[k])>m)m=Math.abs(a[k]);return m;},pa=peak(last.A),pb=peak(last.B);
+  const rows=last.A.L.map((n,i)=>{const a=pa(i),b=pb(i),l=T.links.get(n);return{n,kind:l?l.kind:'link',a,b,d:b-a};}),big=rows.reduce((m,r)=>Math.max(m,r.a,r.b),0),near=Math.max(1e-3,1e-6*big);
+  rows.forEach(r=>{r.rel=r.a>near?100*r.d/r.a:null;});rows.sort((p,q)=>Math.abs(q.d)-Math.abs(p.d));view.rows=rows;view.near=near;
+  $('diffT').innerHTML=`<tr><th>Link</th><th>Kind</th><th class="n">EPA peak</th><th class="n">RASPIPE peak</th><th class="n">&Delta;Q</th><th class="n">Relative</th></tr>`+rows.slice(0,10).map(r=>`<tr><td>${esc(r.n)}</td><td>${r.kind}</td><td class="n">${fmt(r.a)}</td><td class="n">${fmt(r.b)}</td><td class="n">${fmt(r.d)}</td><td class="n">${r.rel==null?'near-zero baseline':fmt(r.rel,1)+'%'}</td></tr>`).join('');
+  $('diffN').textContent=`Peak of |flow| in ${U.q}, ranked by the size of ΔQ = RASPIPE − EPA. Where EPA's peak is ${fmt(near,4)} or less a percentage means nothing, so none is shown.`;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function flowUnits(inp){const m=(inp.match(/^\s*FLOW_UNITS\s+(\S+)/mi)||[])[1]||'CFS',si=/CMS|LPS|MLD/i.test(m);return{q:m.toUpperCase(),l:si?'m':'ft',v:si?'m³':'ft³'};}
+const iso=d=>new Date(Date.UTC(1899,11,30)+Math.round(d*86400)*1000).toISOString().slice(0,19);
+const stem=()=>(last.name||'model').replace(/\.inp$/i,'').replace(/[^\w.-]+/g,'_');
+function csvHead(extra){const r=last,o=r.o,b=r.rb,U=r.units;return [`# SWMM5 RASPIPE export, run ${r.id}, finished ${r.when}`,`# model: ${r.name}; input SHA-256 (first 16 hex): ${r.hash}; units: ${U.q}, ${U.l}`,...extra,
+  `# status: ${r.status==='completed'?'completed':'completed with convergence warnings: '+r.warn.join('; ')}`,
+  `# requested: equations ${o.eqn}; cell ${o.cell} ${U.l}; limit ${o.maxc}; theta ${o.theta}; Courant ${o.cour}; warm up ${o.warm}; stage projection ${o.stg}; routing step ${o.dt||'as in model'}; variable step ${o.vs===''?'as in model':o.vs}`,
+  `# achieved: ${b.cells||''} cells / faces; cell length min ${b.len?b.len[0]:''} median ${b.len?b.len[1]:''} max ${b.len?b.len[2]:''}; conduits at limit ${b.cap?b.cap[0]+' of '+b.cap[1]:''}; pipe step min ${b.dts?b.dts[0]:''} mean ${b.dts?b.dts[1]:''} max ${b.dts?b.dts[2]:''} s; largest Courant ${b.cr}`,
+  `# engines: RASPIPE ${b.build||''}; EPA ${r.ra.engine||''}; continuity EPA ${r.ra.cont}% RASPIPE ${b.cont}%`];}
+$('csvBtn').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const s=series(),v=$('vari').value,U=last.units,el=$('elem').selectedOptions[0].textContent,u=unitOf(v,U);
+  const key=new Map();const put=(q,i)=>{for(let k=0;k<q.d.length;k++){const t=Math.round(q.d[k]*86400);if(!key.has(t))key.set(t,[q.d[k],q.x[k],'','']);key.get(t)[i]=q.y[k];}};put(s[0],2);put(s[1],3);
+  const rows=[...key.keys()].sort((a,b)=>a-b).map(t=>key.get(t));
+  const c=csvHead([`# element: ${el}; variable: ${LABEL[v].toLowerCase()}; units: ${u}`]).concat([`datetime,hours_from_start,EPA_DYNWAVE_${v}_${u},RASPIPE_${v}_${u}`],rows.map(r=>`${iso(r[0])},${r[1].toFixed(6)},${r[2]},${r[3]}`)).join('\n')+'\n';
+  saveFile(`${stem()}_${el.replace(/[^\w.-]+/g,'_')}_${v}_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
+$('peakCsv').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const U=last.units;
+  const c=csvHead([`# table: peak |flow| for every link, ${U.q}, ranked by |RASPIPE - EPA|; relative is empty for a near-zero EPA peak (${view.near})`]).concat(['link,kind,EPA_peak,RASPIPE_peak,delta,relative_percent'],view.rows.map(r=>`${r.n},${r.kind},${r.a},${r.b},${r.d},${r.rel==null?'':r.rel.toFixed(3)}`)).join('\n')+'\n';
+  saveFile(`${stem()}_peak_link_flow_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
+$('inpBtn').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const n=`${stem()}_raspipe_run${last.id}.inp`;const inApp=window.claude&&window.claude.use;saveFile(inApp?n+'.txt':n,new Blob([last.deckB],{type:'text/plain'}));});
+
+/* ---------- Profile tab ---------- */
+let prof=null,profTimer=null;
+function profClear(){prof=null;$('pchart').innerHTML='';$('pT').innerHTML='';$('pNone').hidden=false;$('pNone').textContent='Run a model on the Run tab first.';$('pFrom').innerHTML='';$('pTo').innerHTML='';}
+function profInit(){const T=view.topo||(view.topo=topology(last.inp));const ids=[...T.nodes.keys()];['pFrom','pTo'].forEach(i=>{$(i).innerHTML=ids.map(n=>`<option>${esc(n)}</option>`).join('');});
+  const d=defaultPath(T);if(d){$('pFrom').value=d.from;$('pTo').value=d.to;}else if(ids.length>1){$('pFrom').value=ids[0];$('pTo').value=ids[ids.length-1];}
+  $('pTime').max=last.A.nper-1;const qs=[];for(let j=0;j<Math.min(last.B.L.length,40);j++)qs.push(last.B.link(j,0));let ip=0,bv=-1;for(let r=0;r<last.B.nper;r++){let s=0;for(const q of qs)s+=Math.abs(q[r]);if(s>bv){bv=s;ip=r;}}$('pTime').value=ip;profBuild();}
+function profBuild(){if(!last)return;const T=view.topo,p=pathBetween(T,$('pFrom').value,$('pTo').value);if(!p){prof=null;$('pchart').innerHTML='';$('pT').innerHTML='';$('pNone').hidden=false;$('pNone').textContent='These two nodes are not connected. Pick another pair.';return;}
+  $('pNone').hidden=true;const iA=n=>last.A.N.indexOf(n),nodes=[];let x=0;const add=(id,x)=>{const n=T.nodes.get(id),j=iA(id);nodes.push({id,x,n,j,hA:j>=0?last.A.node(j,1):null,hB:j>=0?last.B.node(j,1):null});};add(p[0].from,0);
+  const segs=p.map(s=>{const l=s.link,L=l.kind==='conduit'?l.len:Math.max(20,0),a=x;x+=L;add(s.to,x);const up=T.nodes.get(s.sense>0?l.a:l.b),dn=T.nodes.get(s.sense>0?l.b:l.a),o1=s.sense>0?l.off1:l.off2,o2=s.sense>0?l.off2:l.off1;const j=last.A.L.indexOf(l.id);return{s,l,a,b:x,z1:up.inv+o1,z2:dn.inv+o2,h:l.h||0,qA:j>=0?last.A.link(j,0):null,qB:j>=0?last.B.link(j,0):null,cells:cellsOf(l,up,dn,o1,o2)};});
+  prof={nodes,segs};profDraw();}
+function cellsOf(l,up,dn,o1,o2){if(l.kind!=='conduit')return 0;const a=(up.kind!=='outfall'&&Math.abs(o1)<1e-6)?.5:0,b=(dn.kind!=='outfall'&&Math.abs(o2)<1e-6)?.5:0;let m=Math.floor(l.len/last.o.cell-a-b+.5);m=Math.min(Math.max(m,1),last.o.maxc);return{m,a,b,d:l.len/(a+m+b)};}
+function profDraw(){if(!prof||!last)return;const t=+$('pTime').value,{nodes,segs}=prof,U=last.units;$('pTimeO').textContent=iso(last.A.days[t]).replace('T',' ')+', '+fmt(last.A.hours[t],3)+' h';
+  const xs=nodes[nodes.length-1].x||1;let y0=1e300,y1=-1e300;const see=v=>{if(isFinite(v)){if(v<y0)y0=v;if(v>y1)y1=v;}};segs.forEach(s=>{see(s.z1);see(s.z2);see(s.z1+s.h);see(s.z2+s.h);});nodes.forEach(n=>{see(n.n.inv);see(n.n.inv+n.n.max);if(n.hA){see(n.hA[t]);see(n.hB[t]);}});
+  if(!(y1>y0))y1=y0+1;const pad=(y1-y0)*.08;y0-=pad;y1+=pad;const svg=$('pchart'),F=frame(svg,0,xs,y0,y1,{xl:`Distance along the path (${U.l})`,yl:`Elevation (${U.l})`}),{X,Y}=F;let h=F.h;
+  segs.forEach(s=>{if(s.l.kind!=='conduit'){h+=`<line x1="${X(s.a)}" x2="${X(s.b)}" y1="${Y(s.z1)}" y2="${Y(s.z2)}" stroke="var(--s4)" stroke-dasharray="4 4"/>`;return;}
+    h+=`<path d="M${X(s.a)} ${Y(s.z1)}L${X(s.b)} ${Y(s.z2)}L${X(s.b)} ${Y(s.z2+s.h)}L${X(s.a)} ${Y(s.z1+s.h)}Z" fill="var(--panel)" stroke="var(--axis)" stroke-width="1.5"/>`;
+    const c=s.cells;if(c&&c.m*(X(s.b)-X(s.a))/(s.l.len||1)*c.d>0){const sp=(X(s.b)-X(s.a))*c.d/s.l.len;if(sp>=3)for(let i=0;i<=c.m;i++){const f=(s.s.sense>0?(c.a+i)*c.d:s.l.len-(c.a+i)*c.d)/s.l.len,xx=s.a+f*(s.b-s.a),z=s.z1+f*(s.z2-s.z1);h+=`<line x1="${X(xx)}" x2="${X(xx)}" y1="${Y(z)}" y2="${Y(z+s.h)}" stroke="var(--grid)"/>`;}}
+    [[s.qA,'s1',-1],[s.qB,'s2',1]].forEach(([q,col,off])=>{if(!q)return;const v=q[t]*s.s.sense;if(Math.abs(v)<1e-6)return;const mx=X((s.a+s.b)/2),my=Y((s.z1+s.z2+s.h)/2)+off*8,d=v>0?1:-1;h+=`<path d="M${mx+7*d} ${my}L${mx-7*d} ${my-5}L${mx-7*d} ${my+5}Z" fill="var(--${col})"/>`;});});
+  nodes.forEach(n=>{h+=`<line x1="${X(n.x)}" x2="${X(n.x)}" y1="${Y(n.n.inv)}" y2="${Y(n.n.inv+n.n.max)}" stroke="var(--axis)" stroke-width="2"/>`;});
+  [['hA','s1'],['hB','s2']].forEach(([k,c])=>{let d='',pen=false;nodes.forEach(n=>{if(!n[k]){pen=false;return;}d+=(pen?'L':'M')+X(n.x).toFixed(1)+' '+Y(n[k][t]).toFixed(1);pen=true;});h+=`<path d="${d}" fill="none" stroke="var(--${c})" stroke-width="2.5"/>`;nodes.forEach(n=>{if(n[k])h+=`<circle cx="${X(n.x).toFixed(1)}" cy="${Y(n[k][t]).toFixed(1)}" r="3" fill="var(--${c})"/>`;});});
+  svg.innerHTML=h+F.tail;
+  const big=nodes.length>60;$('pT').innerHTML=`<tr><th>Node</th><th class="n">Station</th><th class="n">Invert</th><th class="n">Rim</th><th class="n">EPA head</th><th class="n">RASPIPE head</th><th class="n">Difference</th></tr>`+(big?nodes.filter((n,i)=>i%Math.ceil(nodes.length/40)===0):nodes).map(n=>`<tr><td>${esc(n.id)}</td><td class="n">${fmt(n.x,0)}</td><td class="n">${fmt(n.n.inv,2)}</td><td class="n">${n.n.max?fmt(n.n.inv+n.n.max,2):'–'}</td><td class="n">${n.hA?fmt(n.hA[t],3):'not in .out'}</td><td class="n">${n.hB?fmt(n.hB[t],3):'not in .out'}</td><td class="n">${n.hA?fmt(n.hB[t]-n.hA[t],3):''}</td></tr>`).join('');}
+['pFrom','pTo'].forEach(i=>$(i).addEventListener('change',profBuild));$('pTime').addEventListener('input',profDraw);
+$('pPlay').addEventListener('click',()=>{if(profTimer){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';return;}if(!last)return;$('pPlay').textContent='Pause';const n=last.A.nper,st=Math.max(1,Math.round(n/240));profTimer=setInterval(()=>{let v=+$('pTime').value+st;if(v>=n){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';v=n-1;}$('pTime').value=v;if($('p-prof').hidden){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';return;}profDraw();},100);});
+$('pCsv').addEventListener('click',()=>{if(!last||!prof)return setStatus('Run a model first.');const t=+$('pTime').value,U=last.units;
+  const c=csvHead([`# profile from ${prof.nodes[0].id} to ${prof.nodes[prof.nodes.length-1].id} at ${iso(last.A.days[t])}; heads in ${U.l}`]).concat(['node,station,invert,rim,EPA_head,RASPIPE_head'],prof.nodes.map(n=>`${n.id},${n.x},${n.n.inv},${n.n.inv+n.n.max},${n.hA?n.hA[t]:''},${n.hB?n.hB[t]:''}`)).join('\n')+'\n';
+  saveFile(`${stem()}_profile_${prof.nodes[0].id}_${prof.nodes[prof.nodes.length-1].id}_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
+
+/* ---------- Inside a cell ---------- */
+function circA(y,D){if(y<=0)return 0;if(y>=D)return Math.PI*D*D/4;const t=2*Math.acos(1-2*y/D);return D*D/8*(t-Math.sin(t));}
+function cellTable(D,L,S){const dz=S*L,n=64,e=[],v=[];const G=[0],dy=D/n,A=y=>circA(y,D);for(let i=1;i<=n;i++)G[i]=G[i-1]+.5*(A((i-1)*dy)+A(i*dy))*dy;
+  const g=y=>{if(y<=0)return 0;if(y>=D)return G[n]+A(D)*(y-D);const i=Math.min(n-1,Math.floor(y/dy)),s=y-i*dy,a0=A(i*dy),a1=A((i+1)*dy);return G[i]+s*(a0+.5*s*(a1-a0)/dy);};
+  const zl=-dz/2,zh=dz/2,k=Math.max(32,Math.min(128,Math.ceil((dz+D)/(D/32))));
+  for(let m=0;m<=k;m++){const x=zl+(dz+D)*m/k;e.push(x);v.push(dz<1e-9?A(x-zl)*L:(g(x-zl)-g(x-zh))*L/dz);}v[0]=0;
+  const T=[],T1=[],T2=[],V1=[0],V2=[0];let up=0,dn=0,pr=0;for(let i=0;i<k;i++){const s=(v[i+1]-v[i])/(e[i+1]-e[i]),d=s-pr;if(d>0)up+=d;else dn-=d;T.push(s);T1.push(up);T2.push(dn);pr=s;}
+  T.push(0);{const d=-pr;dn-=d>0?0:d;up+=d>0?d:0;}T1.push(up);T2.push(dn);for(let i=0;i<k;i++){const w=e[i+1]-e[i];V1.push(V1[i]+T1[i]*w);V2.push(V2[i]+T2[i]*w);}
+  let pk=1e30;for(let i=0;i<=k;i++)if(T2[i]>0){pk=e[i];break;}return{e,v,T,T1,T2,V1,V2,k,pk,Vf:v[k],zl};}
+function evalT(t,x){if(x<t.e[0])return{k:-1};let lo=0,hi=t.k;while(lo<hi){const m=(lo+hi+1)>>1;if(x>=t.e[m])lo=m;else hi=m-1;}return{k:lo};}
+const tV=(t,x)=>{const{k}=evalT(t,x);if(k<0)return 0;const w=x-t.e[k];return t.V1[k]-t.V2[k]+(t.T1[k]-t.T2[k])*w;};
+const tV1=(t,x)=>{const{k}=evalT(t,x);if(k<0)return{v:0,p:0};return{v:t.V1[k]+t.T1[k]*(x-t.e[k]),p:t.T1[k]};};
+const tV2=(t,x)=>{const{k}=evalT(t,x);if(k<0)return{v:0,p:0};return{v:t.V2[k]+t.T2[k]*(x-t.e[k]),p:t.T2[k]};};
+const BUDGET=40;
+function plainN(t,W,h,b,x0,max){const path=[x0];let x=x0,ok=false,n=0,r=0;for(;;){const{k}=evalT(t,x),P=k<0?0:Math.max(t.T1[k]-t.T2[k],0);r=tV(t,x)+W*(x-h)-b;if(Math.abs(r)<1e-7){ok=true;break;}if(n>=max)break;const J=P+W;if(J<=0)break;x-=r/J;path.push(x);n++;}return{path,ok,n,res:Math.abs(r),x};}
+function nestedN(t,W,h,b,x0,max){let x=Math.min(x0,t.pk),path=[x],n=0,ok=false;const F=v=>tV(t,v)+W*(v-h)-b;for(let o=0;o<max&&!ok&&n<max;o++){const xk=x,s=tV2(t,xk);for(;n<max;){const a=tV1(t,x),r=a.v-s.v-s.p*(x-xk)+W*(x-h)-b;if(Math.abs(r)<1e-7)break;const J=Math.max(a.p-s.p,0)+W;if(J<=0)break;x-=r/J;path.push(x);n++;}
+    if(Math.abs(F(x))<1e-7)ok=true;}return{path,ok,n,res:Math.abs(F(x)),x};}
+function drawCell(){const D=+$('cD').value,L=+$('cL').value,S=+$('cS').value,F=+$('cF').value,W=Math.pow(10,+$('cW').value),H=+$('cH').value;
+  $('cDO').textContent=D+' ft';$('cLO').textContent=L+' ft';$('cSO').textContent=S.toFixed(3);$('cFO').textContent=F.toFixed(2);$('cWO').textContent=fmt(W,2);$('cHO').textContent=H.toFixed(2)+' D';
+  const t=cellTable(D,L,S),xs=t.e.map(x=>x-t.zl);
+  plot($('tchart'),[{x:xs,y:t.T,c:'s2',w:3},{x:xs,y:t.T1,c:'s3'},{x:xs,y:t.T2,c:'s4'}],{xl:'Water level above the low end of the cell (ft)',yl:'dV/dη (ft²)',yMin:0});
+  const b=F*t.Vf,h=t.zl+D*.4+0,x0=t.zl+H*D,zr=t.zl;const p=plainN(t,W,h,b,x0,BUDGET),n=nestedN(t,W,h,b,x0,BUDGET);
+  const lo=-3,hi=6,clip=v=>Math.max(lo*D,Math.min(hi*D,v-zr))/D,off=q=>q.path.filter(v=>(v-zr)/D<lo||(v-zr)/D>hi).length;
+  plot($('nchart'),[{x:p.path.map((_,i)=>i),y:p.path.map(clip),c:'s1',pts:1},{x:n.path.map((_,i)=>i),y:n.path.map(clip),c:'s2',pts:1}],{xl:'Linear solves',yl:'Level, pipe diameters'});
+  const say=(nm,q,extra)=>`${nm}: started at ${fmt((q.path[0]-zr)/D,3)} D${extra}, took ${q.n} of ${BUDGET} solves, ended at ${fmt((q.x-zr)/D,3)} D with |F| = ${fmt(q.res,8)} ft³, ${q.ok?'closed':'not closed'}.`;
+  const a=[say('Plain Newton',p,''),say('Nested Newton',n,x0>t.pk?`, because the method starts at or below ${fmt((t.pk-zr)/D,3)} D where dV/dη first turns down`:'')];
+  const c=off(p)+off(n);if(c)a.push(`${c} point(s) lie outside the plotted range of ${lo} to ${hi} D and are drawn at its edge.`);
+  a.push('F(η) = V(η) + W(η − h) − b always rises with η, so this equation has exactly one root. A method that misses it ran out of solves or stalled. It does not mean there is no solution.');
+  $('nnote').textContent=a.join(' ');}
+['cD','cL','cS','cF','cW','cH'].forEach(i=>$(i).addEventListener('input',drawCell));
+
+/* ---------- Verify ---------- */
+let verifyDrawn=false;
+function table(id,head,rows,cls){$(id).innerHTML='<tr>'+head.map((h,i)=>`<th${cls&&cls[i]?' class="n"':''}>${h}</th>`).join('')+'</tr>'+rows.map(r=>'<tr>'+r.map((c,i)=>`<td${cls&&cls[i]?' class="n"':''}>${c}</td>`).join('')+'</tr>').join('');}
+function drawVerify(){if(verifyDrawn||!DATA)return;verifyDrawn=true;const V=DATA.verify,S=DATA.sweep,W=DATA.wave,B=DATA.bench;
+  $('vHead').innerHTML=DATA.headline;
+  $('mT').innerHTML=DATA.measures.map(m=>`<div class="tile"><b>${esc(m.t)}</b><div class="pair"><span class="v0">${esc(m.big)}</span></div><i>${esc(m.sub)}</i></div>`).join('');
+  // Stoker
+  const st=B.stoker;plot($('stchart'),[{x:st.exact.x,y:st.exact.h,c:'s3',w:4},{x:st.v11.x,y:st.v11.h,c:'s1'},{x:st.v12.x,y:st.v12.h,c:'s5'},{x:st.v12t.x,y:st.v12t.h,c:'s2'}],{xl:'Distance along the pipe (ft)',yl:'Depth (ft)',yMin:0});
+  table('stT',['Solution','Cell, step','Middle depth (ft)','Bore speed (ft/s)','Mean depth error (ft)'],st.rows.map(r=>[esc(r.name),esc(r.mesh),fmt(r.star,3)+(r.star_err==null?'':` (${r.star_err>0?'+':''}${fmt(r.star_err,2)}%)`),fmt(r.speed,2)+(r.speed_err==null?'':` (${r.speed_err>0?'+':''}${fmt(r.speed_err,1)}%)`),r.l1==null?'':fmt(r.l1,3)]),[0,0,1,1,1]);
+  $('stN').textContent=st.note;
+  // U-tube
+  const ut=B.utube;plot($('utchart'),[{x:ut.exact.x,y:ut.exact.z,c:'s3',w:4},{x:ut.epa.x,y:ut.epa.z,c:'s1'},{x:ut.rp.x,y:ut.rp.z,c:'s2'}],{xl:'Seconds',yl:'Tank level above the mean (ft)'});
+  table('utT',['Solution','Step (s)','Period (s)','Error','Amplitude after one cycle'],ut.rows.map(r=>[esc(r.name),r.dt,r.T==null?'none':fmt(r.T,1),r.err==null?'':fmt(r.err,2)+'%',r.dec==null?'':fmt(r.dec,3)]),[0,1,1,1,1]);
+  $('utN').textContent=ut.note;
+  // wave
+  const win=r=>{const x=[],y=[];r.t.forEach((t,i)=>{if(t>=30&&t<=150){x.push(t);y.push(r.q[i]);}});return{x,y};};
+  plot($('wchart'),[{...win(W.ref),c:'s3',w:4},{...win(W.fine),c:'s5',dash:'6 4'},{...win(W.rp),c:'s2'},{...win(W.stock),c:'s1'}],{xl:'Minutes after the wave enters',yl:'Flow (cfs)',yMin:0});
+  $('wleg').innerHTML=W.leg.map(r=>`<span><i style="background:var(--${r[1]})"></i>${esc(r[0])}</span>`).join('');
+  table('wT',['What varies','Solution','Peak error','Peak time (min)','Rise time (min)','RMSE (cfs)','NSE','Volume','Ripple','Head error at 4,000 ft (ft)','Pipe step, min / mean / max (s)'],W.rows.map(r=>[esc(r.g),esc(r.name),fmt(r.peak_err,2)+'%',fmt(r.tp_err,1),fmt(r.rise_err,2),fmt(r.rmse,3),r.nse.toFixed(4),fmt(r.vol_err,2)+'%',fmt(r.osc,3),fmt(r.y_err,3),esc(r.steps||'')]),[0,0,1,1,1,1,1,1,1,1,1]);
+  $('wNote').textContent=W.note;
+  // method
+  table('mtT',['Part','HEC documentation','RASPIPE 1.2','Difference, and the test'],DATA.method.map(r=>r.map(esc)));
+  // tests
+  table('vT',['Test','What was checked','Kind of evidence','Tolerance','Expected','Result','Error'],V.map(r=>[`<span class="mono">${r.id}</span>`,esc(r.name)+(r.note?`<br><small style="color:var(--ink-faint)">${esc(r.note)}</small>`:''),`<span class="chip ${r.ec}">${esc(r.evidence)}</span>`,esc(r.tol||''),(typeof r.expect==='number'?fmt(r.expect,4):esc(r.expect))+' '+esc(r.unit||''),(typeof r.got==='number'?fmt(r.got,4):esc(r.got))+' '+esc(r.unit||''),r.err==null?'':fmt(r.err,3)+'%']),[0,0,0,0,1,1,1]);
+  $('sNote').textContent=S.note;
+  table('oT',['Outcome','EPA 5.2.4','RASPIPE','Models'],S.outcomes.map(r=>r.map(x=>esc(x))),[0,0,0,1]);
+  const m=800,bw=(m-80)/S.bins.length;let h='';const mx=Math.max(...S.bins.map(b=>Math.max(b.ref,b.rp)));const y=v=>230-v/mx*210;
+  S.bins.forEach((b,i)=>{const x=64+i*bw;h+=`<rect x="${x+bw*.12}" y="${y(b.ref)}" width="${bw*.36}" height="${230-y(b.ref)}" fill="var(--s1)"/><rect x="${x+bw*.5}" y="${y(b.rp)}" width="${bw*.36}" height="${230-y(b.rp)}" fill="var(--s2)"/><text x="${x+bw*.3}" y="${y(b.ref)-4}" text-anchor="middle" font-size="12" fill="var(--axis)" font-family="var(--mono)">${b.ref}</text><text x="${x+bw*.68}" y="${y(b.rp)-4}" text-anchor="middle" font-size="12" fill="var(--axis)" font-family="var(--mono)">${b.rp}</text><text x="${x+bw/2}" y="250" text-anchor="middle" font-size="12" fill="var(--axis)">${esc(b.label)}</text>`;});
+  h+='<line x1="64" x2="790" y1="230" y2="230" stroke="var(--line)"/><text x="427" y="274" text-anchor="middle" font-size="13" fill="var(--axis)">Size of the routing continuity error</text>';$('schart').innerHTML=h;
+  table('sT',['Measure','EPA 5.2.4','RASPIPE'],S.rows.map(r=>r.map(esc)),[0,1,1]);
+  table('uT',['Model','Unsolved steps','Largest residual (ft³)','Continuity','Status'],S.unsolved.map(r=>[esc(r[0]),r[1],esc(r[2]),esc(r[3]),`<span class="chip ${r[5]}">${esc(r[4])}</span>`]),[0,1,1,1,0]);
+  $('uN').textContent=S.unnote;
+  table('sweT',['Measure','Theta 1.0','Theta 0.6'],S.swe.map(r=>r.map(esc)),[0,1,1]);$('sweN').textContent=S.swenote;
+  table('cT',['Models with','Count','EPA median','RASPIPE median','RASPIPE past 1%'],S.census.map(r=>r.map(x=>esc(String(x)))),[0,1,1,1,1]);
+  $('dT').innerHTML='<tr><th>No.</th><th>Finding</th><th>Status</th></tr>'+DATA.defects.map(d=>`<tr><td class="mono">${d[0]}</td><td>${esc(d[1])}</td><td><span class="chip ${d[3]}">${esc(d[2])}</span></td></tr>`).join('');
+  $('vLimits').innerHTML=DATA.limits;}
+
+/* ---------- About ---------- */
+$('optT').innerHTML='<tr><th>Option</th><th>Default</th><th>Meaning</th></tr>'+DATA.options.map(o=>`<tr><td class="mono">${o[0]}</td><td class="mono">${o[1]}</td><td>${esc(o[2])}</td></tr>`).join('');
+$('srcs').innerHTML=DATA.sources.map(s=>`<li>${s[1]?`<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`:esc(s[0])}</li>`).join('');
+$('aiuse').innerHTML=DATA.aiuse.map(p=>`<p>${p}</p>`).join('');
+$('prov').innerHTML=DATA.prov;$('ver').textContent='v'+VERSION;
+$('docxBtn').addEventListener('click',()=>{if(!DOCX_B64||DOCX_B64.length<100)return setStatus('The .docx is not in this build.');saveFile('SWMM5-RASPIPE.docx',new Blob([b64bytes(DOCX_B64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));});
+document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=document.getElementById(a.getAttribute('href').slice(1));if(t){t.open=true;t.scrollIntoView();}}));
+
+/* ---------- GIF: a small GIF89a encoder, so nothing has to be fetched ---------- */
+function gifEncode(frames,w,h,pal,delay){const out=[];const b=(...a)=>a.forEach(x=>out.push(x&255));const s=t=>{for(const c of t)out.push(c.charCodeAt(0));};const u16=v=>b(v,v>>8);
+  s('GIF89a');u16(w);u16(h);const bits=Math.ceil(Math.log2(pal.length));b(0x80|(bits-1),0,0);for(let i=0;i<(1<<bits);i++){const p=pal[i]||[0,0,0];b(p[0],p[1],p[2]);}
+  b(0x21,0xFF,11);s('NETSCAPE2.0');b(3,1,0,0,0);
+  for(const f of frames){b(0x21,0xF9,4,0);u16(delay);b(0,0);b(0x2C);u16(0);u16(0);u16(w);u16(h);b(0);const mcs=Math.max(2,bits);b(mcs);
+    const clear=1<<mcs,eoi=clear+1;let size=mcs+1,next=eoi+1,dict=new Map(),cur=0,nb=0,sub=[];const emit=c=>{cur|=c<<nb;nb+=size;while(nb>=8){sub.push(cur&255);cur>>>=8;nb-=8;if(sub.length===255){b(255);for(const x of sub)out.push(x);sub=[];}}};
+    emit(clear);let p=f[0];for(let i=1;i<f.length;i++){const c=f[i],k=p*4096+c,v=dict.get(k);if(v!==undefined){p=v;continue;}emit(p);if(next<4096){dict.set(k,next++);if(next>(1<<size)&&size<12)size++;}else{emit(clear);dict=new Map();size=mcs+1;next=eoi+1;}p=c;}
+    emit(p);emit(eoi);if(nb>0)sub.push(cur&255);while(sub.length){const n=Math.min(255,sub.length);b(n);for(let i=0;i<n;i++)out.push(sub[i]);sub=sub.slice(n);}b(0);}
+  b(0x3B);return new Uint8Array(out);}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function rgb(c){const m=c.match(/^#(..)(..)(..)$/);return m?[parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)]:[128,128,128];}
+$('gifBtn').addEventListener('click',async()=>{if(!last)return setStatus('Run a model first.');const btn=$('gifBtn');btn.disabled=true;setStatus('Drawing the GIF…');await new Promise(r=>setTimeout(r,30));
+  try{const W=640,H=360,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d',{willReadFrequently:true}),s=series();
+    const bg=rgb(css('--face')),fg=rgb(css('--ink-strong')),dim=rgb(css('--axis')),s1=rgb(css('--s1')),s2=rgb(css('--s2')),gr=rgb(css('--grid'));
+    const pal=[bg,gr];for(let i=1;i<=6;i++)pal.push(bg.map((v,k)=>Math.round(v+(fg[k]-v)*i/6)));for(let i=1;i<=3;i++){pal.push(bg.map((v,k)=>Math.round(v+(s1[k]-v)*i/3)));pal.push(bg.map((v,k)=>Math.round(v+(s2[k]-v)*i/3)));}pal.push(dim);while(pal.length<16)pal.push(bg);
+    const m={l:60,r:14,t:40,b:66},iw=W-m.l-m.r,ih=H-m.t-m.b;let y0=1e300,y1=-1e300;s.forEach(q=>{for(const v of q.y){if(v<y0)y0=v;if(v>y1)y1=v;}});if(!(y1>y0))y1=y0+1;const x1=s[0].x[s[0].x.length-1],x0=s[0].x[0];
+    const X=v=>m.l+(v-x0)/(x1-x0||1)*iw,Y=v=>m.t+ih-(v-y0)/(y1-y0)*ih,col=c=>`rgb(${c[0]},${c[1]},${c[2]})`;const names=$('chartT').textContent,rp=last.rb,ra=last.ra;
+    const caps=[`${last.name}: the same model, two solvers`,`Amber is EPA 5.2.4 DYNWAVE, blue is RASPIPE`,`Routing continuity ${fmt(ra.cont)}% against ${fmt(rp.cont)}%`,`RASPIPE mesh ${rp.cells||''} cells / faces, ${fmt(rp.trials,2)} trials per step`];
+    const frames=[],N=28,n=s[0].x.length;const cache=new Map();const near=(r,gg,bb)=>{const k=(r<<16)|(gg<<8)|bb;let v=cache.get(k);if(v!==undefined)return v;let best=0,bd=1e12;for(let i=0;i<pal.length;i++){const p=pal[i],d=(p[0]-r)**2+(p[1]-gg)**2+(p[2]-bb)**2;if(d<bd){bd=d;best=i;}}cache.set(k,best);return best;};
+    for(let f=1;f<=N;f++){const lim=Math.max(2,Math.floor(n*Math.min(1,f/(N-4))));g.fillStyle=col(bg);g.fillRect(0,0,W,H);g.font='600 15px sans-serif';g.fillStyle=col(fg);g.fillText(names,m.l,24);g.font='12px monospace';g.fillStyle=col(dim);g.strokeStyle=col(gr);
+      for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4,p=Y(v);g.beginPath();g.moveTo(m.l,p);g.lineTo(W-m.r,p);g.stroke();g.fillText(String(+v.toPrecision(4)),6,p+4);}
+      g.fillText('hours',W-60,m.t+ih+16);g.fillText(String(+x1.toFixed(2)),W-m.r-40,m.t+ih+32);g.fillText(String(+x0.toFixed(2)),m.l,m.t+ih+32);
+      [[s[0],s1],[s[1],s2]].forEach(([q,c])=>{g.strokeStyle=col(c);g.lineWidth=2;g.beginPath();const st=Math.max(1,Math.floor(lim/500));for(let i=0;i<lim;i+=st){const a=X(q.x[i]),b=Y(q.y[i]);i?g.lineTo(a,b):g.moveTo(a,b);}g.stroke();});g.lineWidth=1;
+      g.font='14px sans-serif';g.fillStyle=col(fg);g.fillText(caps[Math.min(caps.length-1,Math.floor((f-1)/N*caps.length))],m.l,H-14);
+      const d=g.getImageData(0,0,W,H).data,fr=new Uint8Array(W*H);for(let i=0,j=0;i<fr.length;i++,j+=4)fr[i]=near(d[j],d[j+1],d[j+2]);frames.push(fr);if(f%6===0){setStatus('Drawing the GIF, frame '+f+' of '+N+'…');await new Promise(r=>setTimeout(r,0));}}
+    const bytes=gifEncode(frames,W,H,pal.slice(0,16),30);await saveFile((last.name||'model').replace(/\.inp$/i,'')+'_raspipe.gif',new Blob([bytes],{type:'image/gif'}));
+  }catch(e){setStatus('GIF failed: '+e.message);}finally{btn.disabled=false;}});
+
+/* ---------- boot ---------- */
+refreshLabels();drawCell();
+let seen=false;try{seen=localStorage.getItem('raspipe_seen')==='1';localStorage.setItem('raspipe_seen','1');}catch(e){}
+if(!seen)openHelp();
+pick(0);
+</script>

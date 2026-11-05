@@ -1,0 +1,15 @@
+== TAITRANS, stock vs v1.1
+   median 1.177 s  min 1.142 s  max 1.226 s  run-to-run spread 7.1% of median
+B/A: 2.514× by medians; per-pair ratios 2.272–2.527 (median 2.506)
+Resolved: every interleaved pair agrees on the sign. Quote it as 2.51× with the 2.27–2.53 range attached.
+== IH11, stock vs v1.1
+   median 1.817 s  min 1.769 s  max 1.883 s  run-to-run spread 6.3% of median
+B/A: 0.858× by medians; per-pair ratios 0.826–0.895 (median 0.858)
+Resolved: every interleaved pair agrees on the sign. Quote it as 0.86× with the 0.83–0.90 range attached.
+== user2_rect_closed_varied, stock vs v1.1
+   median 46.312 s  min 46.055 s  max 48.471 s  run-to-run spread 5.2% of median
+B/A: 32.715× by medians; per-pair ratios 30.736–33.809 (median 32.534)
+Resolved: every interleaved pair agrees on the sign. Quote it as 32.72× with the 30.74–33.81 range attached.
+
+Version 1.2 against version 1.1, diffusion wave, five interleaved pairs, November 4, 2026:
+TAITRANS 0.97x, per-pair 0.947-1.005, not resolved. IH11 1.03x by medians, per-pair 0.952-1.116, not resolved.

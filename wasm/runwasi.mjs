@@ -1,0 +1,10 @@
+import { WASI } from 'node:wasi';
+import { readFileSync } from 'node:fs';
+import { argv } from 'node:process';
+const [ , , wasm, dir, ...args ] = argv;
+const w = new WASI({ version:'preview1', args:['swmm5',...args], preopens:{'/':dir} , returnOnExit:true});
+const m = await WebAssembly.compile(readFileSync(wasm));
+const inst = await WebAssembly.instantiate(m, w.getImportObject());
+const t0=Date.now();
+const rc = w.start(inst);
+console.error('rc',rc,'ms',Date.now()-t0);

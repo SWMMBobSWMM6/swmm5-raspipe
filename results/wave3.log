@@ -1,0 +1,18 @@
+EPA 5.2.4 DYNWAVE, the model as built: two 4,000 ft conduits peak 13.047 at 73.5, start 2.091
+  continuity ['-2.843']
+EPA 5.2.4 DYNWAVE, cut into 160 conduits of 50 ft, step 0.05 s peak 15.420 at 75.0, start 2.000
+  continuity ['-0.111']
+RASPIPE defaults (20 cells a conduit), step 5 s            peak 14.643 at 73.5, start 2.000
+  continuity ['0.007'] ['2.21'] ['43 / 42']
+RASPIPE defaults, step 30 s                                peak 14.546 at 74.0, start 2.000
+  continuity ['0.039'] ['2.76'] ['43 / 42']
+RASPIPE, 5 cells a conduit                                 peak 13.833 at 75.0, start 1.996
+  continuity ['0.007'] ['2.16'] ['12 / 11']
+RASPIPE, 200 ft cells                                      peak 14.636 at 73.5, start 2.000
+  continuity ['0.007'] ['2.21'] ['42 / 41']
+RASPIPE, 50 ft cells                                       peak 14.823 at 73.5, start 2.000
+  continuity ['0.007'] ['2.38'] ['162 / 161']
+RASPIPE, 12.5 ft cells                                     peak 14.885 at 73.5, start 2.000
+  continuity ['0.007'] ['2.38'] ['642 / 641']
+RASPIPE full shallow water, 12.5 ft cells, step 1 s        peak 14.955 at 73.5, start 2.000
+Independent Saint-Venant solver, 6.25 ft cells             peak 14.971 at 73.5, start 2.000

@@ -1,0 +1,373 @@
+diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
+--- epa524/src/solver/dynwave.c	2026-11-03 15:19:16.642111412 -0500
++++ engine/src/solver/dynwave.c	2026-11-03 23:05:54.398515817 -0500
+@@ -64,6 +64,8 @@
+ static const double EXTRAN_CROWN_CUTOFF = 0.96;   // crown cutoff for EXTRAN
+ static const double SLOT_CROWN_CUTOFF   = 0.985257; // crown cutoff for SLOT
+ static const int    DEFAULT_MAXTRIALS   = 8;      // Max. trials per time step
++static const double RASPIPE_MAXSTEP     = 15.0;   // step limit if VARIABLE_STEP set
++static const double RASPIPE_QUIETSTEP   = 300.0;  // step limit when nothing is moving
+ 
+ 
+ //-----------------------------------------------------------------------------
+@@ -170,6 +172,7 @@
+ //
+ {
+     FREE(Xnode);
++    if ( RasPipe ) raspipe_close();
+ }
+ 
+ //=============================================================================
+@@ -188,6 +191,10 @@
+     if ( HeadTol == 0.0 ) HeadTol = DEFAULT_HEADTOL;
+     else HeadTol /= UCF(LENGTH);
+     if ( MaxTrials == 0 ) MaxTrials = DEFAULT_MAXTRIALS;
++
++    // --- RASPIPE mesh size in ft
++    if ( RasPipeCellLen == 0.0 ) RasPipeCellLen = 100.0;
++    else RasPipeCellLen /= UCF(LENGTH);
+ }
+ 
+ //=============================================================================
+@@ -199,6 +206,19 @@
+ //  Purpose: computes variable routing time step if applicable.
+ //
+ {
++    // --- the RASPIPE solver has no Courant limit on pressure waves;
++    //     under VARIABLE_STEP the ROUTING_STEP is only an upper bound,
++    //     so it is held to a value that still resolves pumps and hydrographs
++    if ( RasPipe )
++    {
++        if ( CourantFactor > 0.0 )
++        {
++            if ( raspipe_isQuiet() ) return MIN(fixedStep, RASPIPE_QUIETSTEP);
++            return MIN(fixedStep, RASPIPE_MAXSTEP);
++        }
++        return fixedStep;
++    }
++
+     // --- use user-supplied fixed step if variable step option turned off
+     //     or if its smaller than the min. allowable variable time step
+     if ( CourantFactor == 0.0 ) return fixedStep;
+@@ -238,6 +258,18 @@
+     Omega = OMEGA;
+     initRoutingStep();
+ 
++    // --- hand the step to the RASPIPE solver if selected
++    if ( RasPipe )
++    {
++        int i;
++        Steps = raspipe_execute(tStep, &converged);
++        for (i = 0; i < Nobjects[NODE]; i++)
++            Xnode[i].converged = (char)raspipe_nodeConverged(i);
++        if ( !converged ) updateConvergenceStats();
++        findLimitedLinks();
++        return Steps;
++    }
++
+     // --- keep iterating until convergence 
+     while ( Steps < MaxTrials )
+     {
+diff -ruN -x raspipe.c epa524/src/solver/enums.h engine/src/solver/enums.h
+--- epa524/src/solver/enums.h	2026-11-03 15:19:16.642111412 -0500
++++ engine/src/solver/enums.h	2026-11-03 20:34:01.083831141 -0500
+@@ -485,7 +485,13 @@
+     IGNORE_SNOWMELT, IGNORE_GWATER, IGNORE_ROUTING,
+     IGNORE_QUALITY, MAX_TRIALS, HEAD_TOL,
+     SYS_FLOW_TOL, LAT_FLOW_TOL, IGNORE_RDII,
+-    MIN_ROUTE_STEP, NUM_THREADS, SURCHARGE_METHOD};
++    MIN_ROUTE_STEP, NUM_THREADS, SURCHARGE_METHOD,
++    RASPIPE_EQN, RASPIPE_THETA, RASPIPE_CELL, RASPIPE_MAXCELLS,
++    RASPIPE_NESTED, RASPIPE_COURANT, RASPIPE_STAGE, RASPIPE_WARMUP};
++
++enum  RasPipeEqnType {
++      RASPIPE_DW,                      // diffusion wave
++      RASPIPE_SWE};                    // full shallow water
+ 
+ enum  NoYesType {
+       NO,
+diff -ruN -x raspipe.c epa524/src/solver/flowrout.c engine/src/solver/flowrout.c
+--- epa524/src/solver/flowrout.c	2026-11-03 15:19:16.642111412 -0500
++++ engine/src/solver/flowrout.c	2026-11-03 15:33:15.574004750 -0500
+@@ -100,6 +100,9 @@
+     // --- initialize node & link volumes
+     initNodes();
+     initLinks(routingModel);
++
++    // --- build the mesh for the RASPIPE solver
++    if ( routingModel == DW && RasPipe ) raspipe_init();
+ }
+ 
+ //=============================================================================
+diff -ruN -x raspipe.c epa524/src/solver/funcs.h engine/src/solver/funcs.h
+--- epa524/src/solver/funcs.h	2026-11-03 15:19:16.642111412 -0500
++++ engine/src/solver/funcs.h	2026-11-03 20:53:35.399383708 -0500
+@@ -231,6 +231,17 @@
+ void    dynwave_close(void);
+ double  dynwave_getRoutingStep(double fixedStep);
+ int     dynwave_execute(double tStep);
++
++//-----------------------------------------------------------------------------
++//   Semi-implicit Pipe Solver (RASPIPE) Methods
++//-----------------------------------------------------------------------------
++void    raspipe_init(void);
++void    raspipe_close(void);
++int     raspipe_execute(double tStep, int* isConverged);
++int     raspipe_nodeConverged(int node);
++int     raspipe_endFlows(int link, double* qUp, double* qDn);
++int     raspipe_isQuiet(void);
++void    massbal_addInitStorage(double v);
+ void    dwflow_findConduitFlow(int j, int steps, double omega, double dt);
+ 
+ void    qualrout_init(void);
+diff -ruN -x raspipe.c epa524/src/solver/globals.h engine/src/solver/globals.h
+--- epa524/src/solver/globals.h	2026-11-03 15:19:16.642111412 -0500
++++ engine/src/solver/globals.h	2026-11-03 20:34:16.253380882 -0500
+@@ -76,6 +76,12 @@
+                   ForceMainEqn,             // Flow equation for force mains
+                   LinkOffsets,              // Link offset convention
+                   SurchargeMethod,          // EXTRAN or SLOT method 
++                  RasPipe,                  // TRUE if RASPIPE pipe solver used
++                  RasPipeEqn,               // RASPIPE equation set
++                  RasPipeMaxCells,          // max. interior cells per conduit
++                  RasPipeNestedOnly,        // skip plain Newton (for testing)
++                  RasPipeInitStage,         // project stage into the pipes at the start
++                  RasPipeWarmup,            // warm up steps before the run, 0 = none
+                   AllowPonding,             // Allow water to pond at nodes
+                   InertDamping,             // Degree of inertial damping
+                   NormalFlowLtd,            // Normal flow limited
+@@ -107,6 +113,9 @@
+                   StartDryDays,             // Antecedent dry days
+                   CourantFactor,            // Courant time step factor
+                   MinSurfArea,              // Minimum nodal surface area
++                  RasPipeTheta,             // RASPIPE implicit weighting
++                  RasPipeCellLen,           // RASPIPE target cell length (ft)
++                  RasPipeCourant,           // RASPIPE target Courant, 0 = off
+                   MinSlope,                 // Minimum conduit slope
+                   RunoffError,              // Runoff continuity error
+                   GwaterError,              // Groundwater continuity error
+diff -ruN -x raspipe.c epa524/src/solver/keywords.c engine/src/solver/keywords.c
+--- epa524/src/solver/keywords.c	2026-11-03 15:19:16.645562726 -0500
++++ engine/src/solver/keywords.c	2026-11-03 20:34:01.079819515 -0500
+@@ -94,6 +94,10 @@
+                                w_SYS_FLOW_TOL,      w_LAT_FLOW_TOL,
+                                w_IGNORE_RDII,       w_MIN_ROUTE_STEP,
+                                w_NUM_THREADS,       w_SURCHARGE_METHOD,
++                               w_RASPIPE_EQN,       w_RASPIPE_THETA,
++                               w_RASPIPE_CELL,      w_RASPIPE_MAXCELLS,
++                               w_RASPIPE_NESTED,    w_RASPIPE_COURANT,
++                               w_RASPIPE_STAGE,     w_RASPIPE_WARMUP,
+                                NULL };
+ char* OrificeTypeWords[]   = { w_SIDE, w_BOTTOM, NULL};
+ char* OutfallTypeWords[]   = { w_FREE, w_NORMAL, w_FIXED, w_TIDAL,
+diff -ruN -x raspipe.c epa524/src/solver/massbal.c engine/src/solver/massbal.c
+--- epa524/src/solver/massbal.c	2026-11-03 15:19:16.645562726 -0500
++++ engine/src/solver/massbal.c	2026-11-03 20:34:01.102896320 -0500
+@@ -1022,6 +1022,19 @@
+ 
+ //=============================================================================
+ 
++void massbal_addInitStorage(double v)
++//
++//  Input:   v = volume (ft3)
++//  Output:  none
++//  Purpose: adds water that a RASPIPE warm up placed in the pipes to the initial
++//           stored volume, since it is a starting condition and not an inflow.
++//
++{
++    FlowTotals.initStorage += v;
++}
++
++//=============================================================================
++
+ double massbal_getStoredMass(int p)
+ //
+ //  Input:   p = pollutant index
+diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
+--- epa524/src/solver/project.c	2026-11-03 15:19:16.649562727 -0500
++++ engine/src/solver/project.c	2026-11-03 20:34:01.094310263 -0500
+@@ -481,6 +481,12 @@
+ 
+       // --- choice of flow routing method
+       case ROUTE_MODEL:
++        if ( match(s2, w_RASPIPE) )
++        {
++            RouteModel = DW;
++            RasPipe = TRUE;
++            break;
++        }
+         m = findmatch(s2, RouteModelWords);
+         if ( m < 0 ) m = findmatch(s2, OldRouteModelWords);
+         if ( m < 0 ) return error_setInpError(ERR_KEYWORD, s2);
+@@ -760,6 +766,48 @@
+           SurchargeMethod = m;
+           break;
+ 
++      // --- options for the RASPIPE semi-implicit pipe solver
++      case RASPIPE_EQN:
++          if ( match(s2, "DW") || match(s2, "DIFF") ) RasPipeEqn = RASPIPE_DW;
++          else if ( match(s2, "SWE") || match(s2, "FULL") ) RasPipeEqn = RASPIPE_SWE;
++          else return error_setInpError(ERR_KEYWORD, s2);
++          break;
++
++      case RASPIPE_THETA:
++          if ( !getDouble(s2, &RasPipeTheta) || RasPipeTheta < 0.5 ||
++               RasPipeTheta > 1.0 ) return error_setInpError(ERR_NUMBER, s2);
++          break;
++
++      case RASPIPE_CELL:
++          if ( !getDouble(s2, &RasPipeCellLen) || RasPipeCellLen <= 0.0 )
++              return error_setInpError(ERR_NUMBER, s2);
++          break;
++
++      case RASPIPE_NESTED:
++          RasPipeNestedOnly = match(s2, "YES");
++          break;
++
++      case RASPIPE_COURANT:
++          if ( !getDouble(s2, &RasPipeCourant) || RasPipeCourant < 0.0 )
++              return error_setInpError(ERR_NUMBER, s2);
++          break;
++
++      case RASPIPE_STAGE:
++          RasPipeInitStage = !match(s2, "NO");
++          break;
++
++      case RASPIPE_WARMUP:
++          m = atoi(s2);
++          if ( m < 0 ) return error_setInpError(ERR_NUMBER, s2);
++          RasPipeWarmup = m;
++          break;
++
++      case RASPIPE_MAXCELLS:
++          m = atoi(s2);
++          if ( m < 1 ) return error_setInpError(ERR_NUMBER, s2);
++          RasPipeMaxCells = m;
++          break;
++
+       case TEMPDIR: // Temporary Directory
+         sstrncpy(TempDir, s2, MAXFNAME);
+         break;
+@@ -844,6 +892,15 @@
+    InfilModel      = HORTON;           // Horton infiltration method
+    RouteModel      = DW;               // Dynamic wave flow routing method
+    SurchargeMethod = EXTRAN;           // Use EXTRAN method for surcharging
++   RasPipe         = FALSE;            // RASPIPE pipe solver is off
++   RasPipeEqn      = RASPIPE_DW;       // Diffusion wave, as in HEC's SWMM import
++   RasPipeTheta    = 1.0;              // Fully implicit pressure term
++   RasPipeCellLen  = 0.0;              // 0 = use default (100 ft)
++   RasPipeMaxCells = 20;               // Most interior cells in one conduit
++   RasPipeNestedOnly = FALSE;          // Try plain Newton first
++   RasPipeCourant  = 0.9;              // HEC's default target
++   RasPipeInitStage = TRUE;            // HEC's default for stage boundaries
++   RasPipeWarmup   = 0;                // No warm up period
+    CrownCutoff     = 0.96;             // Fractional pipe crown cutoff 
+    AllowPonding    = FALSE;            // No ponding at nodes
+    InertDamping    = PARTIAL_DAMPING;  // Partial inertial damping
+diff -ruN -x raspipe.c epa524/src/solver/qualrout.c engine/src/solver/qualrout.c
+--- epa524/src/solver/qualrout.c	2026-11-03 15:19:16.649562727 -0500
++++ engine/src/solver/qualrout.c	2026-11-03 16:58:33.815743964 -0500
+@@ -189,7 +189,31 @@
+ //           calculations made in routing_execute().
+ {
+     int    j, p;
+-    double qLink, w;
++    double qLink, w, qUp, qDn;
++
++    // --- RASPIPE: a conduit has a different flow at each end, and water can
++    //     leave through either end or both
++    if ( RasPipe && raspipe_endFlows(i, &qUp, &qDn) )
++    {
++        for (p = 0; p < Nobjects[POLLUT]; p++)
++        {
++            if ( qDn > 0.0 )
++            {
++                w = qDn * Link[i].oldQual[p];
++                Node[Link[i].node2].newQual[p] += w;
++                Link[i].totalLoad[p] += w * tStep;
++            }
++            if ( qUp < 0.0 )
++            {
++                w = -qUp * Link[i].oldQual[p];
++                Node[Link[i].node1].newQual[p] += w;
++                Link[i].totalLoad[p] += w * tStep;
++            }
++        }
++        if ( qDn > 0.0 ) Node[Link[i].node2].qualInflow += qDn;
++        if ( qUp < 0.0 ) Node[Link[i].node1].qualInflow -= qUp;
++        return;
++    }
+ 
+     // --- find inflow to downstream node
+     qLink = Link[i].newFlow;
+@@ -271,7 +295,10 @@
+            vEvap,            // volume lost to evaporation (ft3)
+            vLosses,          // evap. + seepage volume loss (ft3)
+            fEvap,            // evaporation concentration factor
+-           barrels;          // number of barrels in conduit
++           barrels,          // number of barrels in conduit
++           qUp = 0.0,        // flow at each end of a RASPIPE conduit
++           qDn = 0.0;
++    int    ras = FALSE;      // TRUE if both ends are known
+ 
+     // --- identify index of upstream node
+     j = Link[i].node1;
+@@ -292,6 +319,8 @@
+     k = Link[i].subIndex;
+     barrels = Conduit[k].barrels;
+     qIn  = fabs(Conduit[k].q1) * barrels;
++    if ( RasPipe ) ras = raspipe_endFlows(i, &qUp, &qDn);
++    if ( ras ) qIn = MAX(qUp, 0.0) + MAX(-qDn, 0.0);
+     qSeep = Conduit[k].seepLossRate * barrels;
+     vEvap = Conduit[k].evapLossRate * barrels * tStep;
+ 
+@@ -315,7 +344,7 @@
+     // --- adjust inflow to compensate for volume change under Dynamic
+     //     Wave routing (which produces just a single (out)flow rate
+     //     for a conduit)
+-    if ( RouteModel == DW )
++    if ( RouteModel == DW && !ras )
+     {
+         qIn = qIn + (v2 + vLosses - v1) / tStep; 
+         qIn = MAX(qIn, 0.0);
+@@ -338,6 +367,8 @@
+ 
+         // --- mix resulting contents with inflow from upstream node
+         wIn = Node[j].newQual[p]*qIn;
++        if ( ras ) wIn = Node[Link[i].node1].newQual[p] * MAX(qUp, 0.0) +
++                         Node[Link[i].node2].newQual[p] * MAX(-qDn, 0.0);
+         c2 = getMixedQual(c2, v1, wIn, qIn, tStep);
+ 
+         // --- set concen. to zero if remaining volume is negligible
+diff -ruN -x raspipe.c epa524/src/solver/report.c engine/src/solver/report.c
+--- epa524/src/solver/report.c	2026-11-03 15:19:16.649562727 -0500
++++ engine/src/solver/report.c	2026-11-03 15:33:15.574648623 -0500
+@@ -309,6 +309,9 @@
+     if (RouteModel == DW)
+     fprintf(Frpt.file, "\n  Surcharge Method ......... %s",
+         SurchargeWords[SurchargeMethod]);
++    if (RouteModel == DW && RasPipe)
++    fprintf(Frpt.file, "\n  Pipe Solver .............. RASPIPE (%s)",
++        RasPipeEqn == RASPIPE_DW ? "diffusion wave" : "shallow water");
+ 
+     datetime_dateToStr(StartDate, str);
+     fprintf(Frpt.file, "\n  Starting Date ............ %s", str);
+diff -ruN -x raspipe.c epa524/src/solver/text.h engine/src/solver/text.h
+--- epa524/src/solver/text.h	2026-11-03 15:19:16.653562727 -0500
++++ engine/src/solver/text.h	2026-11-03 20:34:01.077906938 -0500
+@@ -104,6 +104,15 @@
+ #define  w_MIN_ROUTE_STEP    "MINIMUM_STEP"
+ #define  w_NUM_THREADS       "THREADS"
+ #define  w_SURCHARGE_METHOD  "SURCHARGE_METHOD"
++#define  w_RASPIPE           "RASPIPE"
++#define  w_RASPIPE_EQN       "RASPIPE_EQUATIONS"
++#define  w_RASPIPE_THETA     "RASPIPE_THETA"
++#define  w_RASPIPE_CELL      "RASPIPE_CELL_LENGTH"
++#define  w_RASPIPE_MAXCELLS  "RASPIPE_MAX_CELLS"
++#define  w_RASPIPE_NESTED    "RASPIPE_NESTED_ONLY"
++#define  w_RASPIPE_COURANT   "RASPIPE_COURANT"
++#define  w_RASPIPE_STAGE     "RASPIPE_INITIAL_STAGE"
++#define  w_RASPIPE_WARMUP    "RASPIPE_WARMUP"
+ 
+ // Flow Units
+ #define  w_CFS               "CFS"
