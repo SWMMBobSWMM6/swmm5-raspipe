@@ -1,0 +1,16 @@
+diff --git a/src/engine/hydraulics/DynamicWave.cpp b/src/engine/hydraulics/DynamicWave.cpp
+index 925915f..cef38a6 100644
+--- a/src/engine/hydraulics/DynamicWave.cpp
++++ b/src/engine/hydraulics/DynamicWave.cpp
+@@ -4418,6 +4418,11 @@ void DWSolver::setNodeDepth(SimulationContext& ctx, int node_idx, double dt, int
+ 
+         double dy = dV / denom;
+         y_new = y_old + dy;
++        static const bool rp_newton = std::getenv("S6_NEWTON") != nullptr;
++        if (rp_newton) {
++            dy = (dV - surf_area * (y_last - y_old)) / denom;
++            y_new = y_last + dy;
++        }
+ 
+         // Save non-ponded surface area (used by flooding logic and CFL)
+         if (!is_ponded) {

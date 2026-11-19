@@ -1,6 +1,6 @@
 diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
 --- epa524/src/solver/dynwave.c	2026-11-03 15:19:16.642111412 -0500
-+++ engine/src/solver/dynwave.c	2026-11-03 23:05:54.398515817 -0500
++++ engine/src/solver/dynwave.c	2026-11-13 06:27:50.159080090 -0500
 @@ -64,6 +64,8 @@
  static const double EXTRAN_CROWN_CUTOFF = 0.96;   // crown cutoff for EXTRAN
  static const double SLOT_CROWN_CUTOFF   = 0.985257; // crown cutoff for SLOT
@@ -18,7 +18,7 @@ diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
  }
  
  //=============================================================================
-@@ -188,6 +191,10 @@
+@@ -188,6 +191,11 @@
      if ( HeadTol == 0.0 ) HeadTol = DEFAULT_HEADTOL;
      else HeadTol /= UCF(LENGTH);
      if ( MaxTrials == 0 ) MaxTrials = DEFAULT_MAXTRIALS;
@@ -26,10 +26,11 @@ diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
 +    // --- RASPIPE mesh size in ft
 +    if ( RasPipeCellLen == 0.0 ) RasPipeCellLen = 100.0;
 +    else RasPipeCellLen /= UCF(LENGTH);
++    RasPipePressArea /= UCF(LENGTH) * UCF(LENGTH);
  }
  
  //=============================================================================
-@@ -199,6 +206,19 @@
+@@ -199,6 +207,19 @@
  //  Purpose: computes variable routing time step if applicable.
  //
  {
@@ -49,7 +50,7 @@ diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
      // --- use user-supplied fixed step if variable step option turned off
      //     or if its smaller than the min. allowable variable time step
      if ( CourantFactor == 0.0 ) return fixedStep;
-@@ -238,6 +258,18 @@
+@@ -238,6 +259,18 @@
      Omega = OMEGA;
      initRoutingStep();
  
@@ -70,15 +71,16 @@ diff -ruN -x raspipe.c epa524/src/solver/dynwave.c engine/src/solver/dynwave.c
      {
 diff -ruN -x raspipe.c epa524/src/solver/enums.h engine/src/solver/enums.h
 --- epa524/src/solver/enums.h	2026-11-03 15:19:16.642111412 -0500
-+++ engine/src/solver/enums.h	2026-11-03 20:34:01.083831141 -0500
-@@ -485,7 +485,13 @@
++++ engine/src/solver/enums.h	2026-11-13 06:27:50.157456653 -0500
+@@ -485,7 +485,14 @@
      IGNORE_SNOWMELT, IGNORE_GWATER, IGNORE_ROUTING,
      IGNORE_QUALITY, MAX_TRIALS, HEAD_TOL,
      SYS_FLOW_TOL, LAT_FLOW_TOL, IGNORE_RDII,
 -    MIN_ROUTE_STEP, NUM_THREADS, SURCHARGE_METHOD};
 +    MIN_ROUTE_STEP, NUM_THREADS, SURCHARGE_METHOD,
 +    RASPIPE_EQN, RASPIPE_THETA, RASPIPE_CELL, RASPIPE_MAXCELLS,
-+    RASPIPE_NESTED, RASPIPE_COURANT, RASPIPE_STAGE, RASPIPE_WARMUP};
++    RASPIPE_NESTED, RASPIPE_COURANT, RASPIPE_STAGE, RASPIPE_WARMUP,
++    RASPIPE_PRESSAREA};
 +
 +enum  RasPipeEqnType {
 +      RASPIPE_DW,                      // diffusion wave
@@ -122,7 +124,7 @@ diff -ruN -x raspipe.c epa524/src/solver/funcs.h engine/src/solver/funcs.h
  void    qualrout_init(void);
 diff -ruN -x raspipe.c epa524/src/solver/globals.h engine/src/solver/globals.h
 --- epa524/src/solver/globals.h	2026-11-03 15:19:16.642111412 -0500
-+++ engine/src/solver/globals.h	2026-11-03 20:34:16.253380882 -0500
++++ engine/src/solver/globals.h	2026-11-13 06:27:59.921129659 -0500
 @@ -76,6 +76,12 @@
                    ForceMainEqn,             // Flow equation for force mains
                    LinkOffsets,              // Link offset convention
@@ -136,20 +138,21 @@ diff -ruN -x raspipe.c epa524/src/solver/globals.h engine/src/solver/globals.h
                    AllowPonding,             // Allow water to pond at nodes
                    InertDamping,             // Degree of inertial damping
                    NormalFlowLtd,            // Normal flow limited
-@@ -107,6 +113,9 @@
+@@ -107,6 +113,10 @@
                    StartDryDays,             // Antecedent dry days
                    CourantFactor,            // Courant time step factor
                    MinSurfArea,              // Minimum nodal surface area
 +                  RasPipeTheta,             // RASPIPE implicit weighting
 +                  RasPipeCellLen,           // RASPIPE target cell length (ft)
 +                  RasPipeCourant,           // RASPIPE target Courant, 0 = off
++                  RasPipePressArea,         // RASPIPE storage per full pipe cell (ft2)
                    MinSlope,                 // Minimum conduit slope
                    RunoffError,              // Runoff continuity error
                    GwaterError,              // Groundwater continuity error
 diff -ruN -x raspipe.c epa524/src/solver/keywords.c engine/src/solver/keywords.c
 --- epa524/src/solver/keywords.c	2026-11-03 15:19:16.645562726 -0500
-+++ engine/src/solver/keywords.c	2026-11-03 20:34:01.079819515 -0500
-@@ -94,6 +94,10 @@
++++ engine/src/solver/keywords.c	2026-11-13 06:27:50.157711544 -0500
+@@ -94,6 +94,11 @@
                                 w_SYS_FLOW_TOL,      w_LAT_FLOW_TOL,
                                 w_IGNORE_RDII,       w_MIN_ROUTE_STEP,
                                 w_NUM_THREADS,       w_SURCHARGE_METHOD,
@@ -157,6 +160,7 @@ diff -ruN -x raspipe.c epa524/src/solver/keywords.c engine/src/solver/keywords.c
 +                               w_RASPIPE_CELL,      w_RASPIPE_MAXCELLS,
 +                               w_RASPIPE_NESTED,    w_RASPIPE_COURANT,
 +                               w_RASPIPE_STAGE,     w_RASPIPE_WARMUP,
++                               w_RASPIPE_PRESSAREA,
                                 NULL };
  char* OrificeTypeWords[]   = { w_SIDE, w_BOTTOM, NULL};
  char* OutfallTypeWords[]   = { w_FREE, w_NORMAL, w_FIXED, w_TIDAL,
@@ -185,7 +189,7 @@ diff -ruN -x raspipe.c epa524/src/solver/massbal.c engine/src/solver/massbal.c
  //  Input:   p = pollutant index
 diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
 --- epa524/src/solver/project.c	2026-11-03 15:19:16.649562727 -0500
-+++ engine/src/solver/project.c	2026-11-03 20:34:01.094310263 -0500
++++ engine/src/solver/project.c	2026-11-13 06:27:50.158816231 -0500
 @@ -481,6 +481,12 @@
  
        // --- choice of flow routing method
@@ -199,7 +203,7 @@ diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
          m = findmatch(s2, RouteModelWords);
          if ( m < 0 ) m = findmatch(s2, OldRouteModelWords);
          if ( m < 0 ) return error_setInpError(ERR_KEYWORD, s2);
-@@ -760,6 +766,48 @@
+@@ -760,6 +766,53 @@
            SurchargeMethod = m;
            break;
  
@@ -233,6 +237,11 @@ diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
 +          RasPipeInitStage = !match(s2, "NO");
 +          break;
 +
++      case RASPIPE_PRESSAREA:
++          if ( !getDouble(s2, &RasPipePressArea) || RasPipePressArea < 0.0 )
++              return error_setInpError(ERR_NUMBER, s2);
++          break;
++
 +      case RASPIPE_WARMUP:
 +          m = atoi(s2);
 +          if ( m < 0 ) return error_setInpError(ERR_NUMBER, s2);
@@ -248,7 +257,7 @@ diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
        case TEMPDIR: // Temporary Directory
          sstrncpy(TempDir, s2, MAXFNAME);
          break;
-@@ -844,6 +892,15 @@
+@@ -844,6 +897,16 @@
     InfilModel      = HORTON;           // Horton infiltration method
     RouteModel      = DW;               // Dynamic wave flow routing method
     SurchargeMethod = EXTRAN;           // Use EXTRAN method for surcharging
@@ -261,6 +270,7 @@ diff -ruN -x raspipe.c epa524/src/solver/project.c engine/src/solver/project.c
 +   RasPipeCourant  = 0.9;              // HEC's default target
 +   RasPipeInitStage = TRUE;            // HEC's default for stage boundaries
 +   RasPipeWarmup   = 0;                // No warm up period
++   RasPipePressArea = 0.0;             // No storage in a full pipe cell
     CrownCutoff     = 0.96;             // Fractional pipe crown cutoff 
     AllowPonding    = FALSE;            // No ponding at nodes
     InertDamping    = PARTIAL_DAMPING;  // Partial inertial damping
@@ -354,8 +364,8 @@ diff -ruN -x raspipe.c epa524/src/solver/report.c engine/src/solver/report.c
      fprintf(Frpt.file, "\n  Starting Date ............ %s", str);
 diff -ruN -x raspipe.c epa524/src/solver/text.h engine/src/solver/text.h
 --- epa524/src/solver/text.h	2026-11-03 15:19:16.653562727 -0500
-+++ engine/src/solver/text.h	2026-11-03 20:34:01.077906938 -0500
-@@ -104,6 +104,15 @@
++++ engine/src/solver/text.h	2026-11-13 06:27:50.157892619 -0500
+@@ -104,6 +104,16 @@
  #define  w_MIN_ROUTE_STEP    "MINIMUM_STEP"
  #define  w_NUM_THREADS       "THREADS"
  #define  w_SURCHARGE_METHOD  "SURCHARGE_METHOD"
@@ -368,6 +378,7 @@ diff -ruN -x raspipe.c epa524/src/solver/text.h engine/src/solver/text.h
 +#define  w_RASPIPE_COURANT   "RASPIPE_COURANT"
 +#define  w_RASPIPE_STAGE     "RASPIPE_INITIAL_STAGE"
 +#define  w_RASPIPE_WARMUP    "RASPIPE_WARMUP"
++#define  w_RASPIPE_PRESSAREA "RASPIPE_PRESSURE_AREA"
  
  // Flow Units
  #define  w_CFS               "CFS"

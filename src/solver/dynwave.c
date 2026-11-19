@@ -195,6 +195,7 @@ void dynwave_validate()
     // --- RASPIPE mesh size in ft
     if ( RasPipeCellLen == 0.0 ) RasPipeCellLen = 100.0;
     else RasPipeCellLen /= UCF(LENGTH);
+    RasPipePressArea /= UCF(LENGTH) * UCF(LENGTH);
 }
 
 //=============================================================================

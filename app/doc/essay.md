@@ -80,7 +80,7 @@ Beyond the table, these came from here and not from HEC:
 - Leaving out manhole cells that hold no pipe when the Courant number is computed.
 - Letting momentum cross a junction that joins exactly two conduits.
 
-A run of real HEC-RAS would very likely differ from this engine in the details, and no such run has been made.
+For four versions no run of real HEC-RAS had been made. One has now, and the section called Asking HEC-RAS itself says where the two part company.
 
 ## What was tested
 A closed-form answer, a second solver and a start-up check don't prove the same thing, and for a while this write-up let them stand in one line as if they did. So each test now wears a label: analytical answer, numerical reference, initialization check, regression check, or cross-engine comparison. The Verify tab has the full list, with tolerances, and the engine zip has a manifest that ties each one to its deck and to the build that ran it.
@@ -143,6 +143,74 @@ Stock SWMM as built gives {{wave.stock}} cfs, {{wave.stockerr}}% low, and it los
 
 One warning for anyone repeating this. Changing `ROUTING_STEP` is not a clean time step study when the Courant control is on, because pipe steps run inside it. A routing step of 30 s ran pipe steps of {{wb.auto30}} s here, min, mean and max. The report now prints those three numbers, and the app shows them.
 
+## Bringing in SWMM6
+The next question anyone will ask is how this stacks up against the engine the community is building now. OpenSWMM 6 gives you two routes worth testing. The modified dynamic wave keeps SWMM's link and node picture and adds three things: `DYNAMIC_SLOT`, `SEMI_IMPLICIT` node continuity and Anderson acceleration. FV is a different animal, an explicit finite volume solver that cuts conduits into cells and solves the full equations with a Riemann flux. So now there are three families in the ring: one flow per conduit, explicit cells, and implicit cells.
+
+Every engine got the same plain `.inp` decks. That ruled out Stoker's test as we ran it earlier, because that used a test build. So we rebuilt the dam break as a deck: 200 conduits of 20 ft, with the step across one of them. First the control. SWMM6 with EXTRAN matched EPA 5.2.4 on all {{six.same}} decks, so the two share a baseline.
+
+{{table:six}}
+
+{{fig:sixdam|Figure 11. The dam break as a plain deck, read at 60 s. SWMM6 FV and RASPIPE's full equations both sit on the exact line. EPA and the modified dynamic wave run the bore short, ripple behind it, and throw a spike at the front. This chart comes from nodes, 20 ft apart, so the bore is 20 ft wide at best.}}
+
+On the dam break, the bore speed came out {{six.ex5}}% for EPA, {{six.s6dw}}% for the modified dynamic wave, {{six.s6fv}}% for FV and {{six.rp}}% for RASPIPE at θ = 0.6. FV and RASPIPE are a dead heat, with mean depth errors of {{six.fvl}} and {{six.rpl}} ft against EPA's {{six.exl}}. EPA and the modified dynamic wave also throw a spike right behind the bore, up to {{six.spike}} and {{six.spiked}} ft in a place where the exact depth is 5.08. Higher than the water behind the gate, for a moment, which no real bore does. Two very different methods got there: one explicit with a Riemann solver, one implicit with backtracking. When two independent roads reach the same town, you start to believe in the town.
+
+On the U-tube, the modified dynamic wave came to {{six.utd}}%, against EPA's {{six.ut5}}%, so the phantom surface is gone. FV came to {{six.utf}}% and RASPIPE {{six.utr}}%. On the wave, what matters is the mesh, not the equations. EPA and the modified dynamic wave both keep one flow per conduit and both sit at {{six.w5}}%. FV at its default of four cells gives {{six.wf0}}%. Give it 100 ft cells and second order and it gives {{six.wf}}%, next to RASPIPE at {{six.wr}}% and {{six.wrs}}%.
+
+Then two rows that need saying plainly, because they are questions and not verdicts. FV gave {{six.pipef}} cfs on the full pipe where Manning says 3.56, and {{six.pumpf}} cfs on the pump deck where a pencil says 4.60. Its steady answer moves with `FV_SLOT_CELERITY`: 4.60, 2.28 and 1.03 cfs at 30, 100 and 300 ft/s. A steady state has no business knowing how fast a pressure wave travels. Make both conduits the same size and it comes back to 3.50 against EPA's 3.55 on that deck. We have not traced the cause. SWMM6 is alpha software, and we may have missed a setting, so that goes to the OpenSWMM people as a question.
+
+`DYNAMIC_SLOT` got the right flows, but its continuity read -44.8% on water at rest. Stored volume went from 0.195 to 0.282 ac-ft with nothing moving, so the final figure appears to count slot volume and the initial one doesn't. It's the same lesson as the pump deck: a slot holds water that isn't there, and you have to keep track of it everywhere.
+
+{{six.corpus}}
+
+So there is no champion here. For a sharp front in the full equations, FV and RASPIPE agree, and they are the ones to use. For pressurized steady flow, as of this build, EXTRAN, the modified dynamic wave and RASPIPE give the closed form, and FV doesn't on these decks. What you pick depends on what question you are asking.
+
+## Where the water went
+The totals look fine. On the {{six.tail.n}} corpus models every engine finished, the modified dynamic wave's median continuity error came to {{six.dwmed}}, a little better than EPA's {{six.epamed}}, and models past 10% came to {{six.tail.d10}} against {{six.tail.e10}}. But a tie can hide a trade. It beat EPA by at least five points on {{six.tail.b}} of those models and lost by at least five on {{six.tail.w}}. Many of the big numbers belong to the corpus, because EPA itself reports 84% on some of those old decks. A few belong to SWMM6 alone. `Peter` is one, a small deck of five junctions and a tank. EPA and SWMM6's EXTRAN each send 0.24 of the 0.26 ac-ft out the outfall. With the modified dynamic wave the outflow is 0.000, the final storage is 0.000, and the water is simply gone. A reporting quirk can't do that, because the flow at the outfall is gone too.
+
+When a result surprises you, change one thing at a time. We ran each option alone over the whole sample.
+
+{{table:opts}}
+
+{{six.o.reading}}
+
+Here is the update, from `setNodeDepth` in `DynamicWave.cpp`, exactly as it stands:
+
+```
+double denom = surf_area + 0.5 * dt * xnode_.sumdqdh[ui];
+if (nodes.storage_area[ui] == 0.0)
+    denom = std::max(denom, min_surf_area_);
+
+double dy = dV / denom;
+y_new = y_old + dy;
+```
+
+Read it as a balance sheet. `dV` is the volume the node gained this step, and dividing by area turns that into a rise. The extra term in the denominator says some of that volume will leave anyway, because a higher head pushes more water down the pipes. That's true, and it's a fair correction the first time you make it. But SWMM iterates. Each trial recomputes the flows at the latest head, so `dV` already knows about the higher head. The denominator then takes the same water out a second time.
+
+Follow it to where the iteration settles and you get (A + ½Δt ΣdQ/dH) ΔH = dV. The node's storage rises by A ΔH, so ½Δt ΣdQ/dH ΔH of volume is left over at every step, on nobody's ledger. A plain junction books no storage, so it has nowhere to show. When the head stops moving, ΔH is zero and the leak closes. That's why steady flows come out right, and why a steady test would never catch it.
+
+The manual's Equation 3-45 has the same form. Its text and the comment above the code both say the flow is linearized about the current head estimate. The current estimate is `y_last`. The equation and the code start from the old head, `y_old`. On the first trial those are the same number, and after that they aren't.
+
+That is a theory, and a theory needs a test. We put a switch in a test copy that starts from the current estimate:
+
+```
+dy = (dV - surf_area * (y_last - y_old)) / denom;
+y_new = y_last + dy;
+```
+
+{{table:semi}}
+
+Read across. Tightening `HEAD_TOLERANCE` to 1e-8 does almost nothing to the code as written. `Peter` stays at 99.998%, so the iteration had already converged, on the wrong answer. The switch brings `CALIBR` and `mod59` most of the way back to plain SWMM6 and gets much of `Peter`'s outflow back. Then the tight tolerance starts to help, which is the second thing we learned. A big denominator makes each step small, so the head test passes while water is still unaccounted for. `IMPERIAL` needs both and still isn't home. `pump_exam` doesn't respond to either. There, External Inflow itself jumps from 0.54 to 6.07 ac-ft, so something else is going on, and we haven't traced it. Over the whole sample the switch takes `SEMI_IMPLICIT`'s wrong-way count from {{six.o.semi.worse}} to {{six.o.semiN.worse}} and its right-way count from {{six.o.semi.better}} to {{six.o.semiN.better}}, so it explains some of the losses and not all of them.
+
+Those are old decks, and some have odd geometry, so we built a clean one. One cfs enters the head of a box 36 ft long and 200 ft wide, and a 2 ft pipe carries it to a free outfall, at a fixed 30 s step.
+
+{{table:box}}
+
+{{fig:shortbox|Figure 12. Flow in the pipe below the box. All three end near 1 cfs, so a steady check sees nothing wrong. The modified dynamic wave takes {{six.box.hr}} hours to get there where the 1 s run takes {{six.box.hr0}}, and the difference is the missing water. The test patch closes the balance, but look how it shakes.}}
+
+Now be fair to `SEMI_IMPLICIT`, because this deck shows why it exists. At 30 s EPA and SWMM6's EXTRAN both come apart, with all the water flooded and a continuity error of -67.95%. `SEMI_IMPLICIT` holds together where they can't. What it charges for that is about 15% of the water: {{six.box.dw}} ac-ft out the outfall against {{six.box.ref}} at a 1 s step. The browser build and the October 29 native build agree on those continuity figures, so this isn't an old bug in an old build.
+
+And don't mistake the switch for a fix. It closes the books at -0.006%, but the flow in the box then rings between {{six.box.lo}} and {{six.box.hi}} cfs. It tells you where the water went. It doesn't tell you how to keep the water and stay stable. That belongs to the OpenSWMM team, who know this code and may know a reason we don't. The manual recommends `SEMI_IMPLICIT` for virtual junctions and TPA, and nothing here tests either one.
+
 ## What the corpus did to it
 A solver that passes its textbook problems has proved that it can pass textbook problems. The test of a sewer solver is a sewer, and the test of the fellow who wrote it is whether he reads the list of his worst results from the top.
 
@@ -191,7 +259,7 @@ So a SWMM routing step now runs as many pipe steps inside it as the target needs
 
 It paid twice. A step can now also grow. HEC says the base interval is "reduced or increased," and SWMM's own variable step stretches through dry weather, so when the target would allow the whole `ROUTING_STEP` and next to nothing is arriving, RASPIPE takes it. While water is moving the step stays at 15 s or less. An 8 month continuous run that used to hit the time limit now finishes in {{opt.t10}} s, and time step sensitivity on the mixed model fell to about a third: at a 60 s step the peak is within {{opt.dt60}}%, where it was 1.46%.
 
-{{fig:options|Figure 11. What HEC's start-up and time step options do on three test decks. The bars in each row are scaled to that row, so compare within a row and not between rows.}}
+{{fig:options|Figure 13. What HEC's start-up and time step options do on three test decks. The bars in each row are scaled to that row, so compare within a row and not between rows.}}
 
 Two more options deal with the first moments of a run, where a model can throw a spike nobody asked for.
 
@@ -210,7 +278,7 @@ Version 1.2 changed the full equations and left diffusion wave alone, and the co
 
 Version 1.1 went through the sample, and it caught its own mistake on the way. The new quiet rule let the very first step run the whole `ROUTING_STEP`, an hour on some decks, before any inflow was known, and reported continuity went from 0.01% to 10%. The step now can't stretch until the run is under way, and never past 300 s. Models with a long `ROUTING_STEP` and `VARIABLE_STEP` on were rerun, 40 others were rerun to show they hadn't moved, and every corpus number here comes from that build.
 
-{{fig:corpus|Figure 12. Routing continuity error across the corpus sample, version 1.1. The corpus is rich in stress tests, so the stock numbers describe those decks and are not typical of a well-built model.}}
+{{fig:corpus|Figure 14. Routing continuity error across the corpus sample, version 1.1. The corpus is rich in stress tests, so the stock numbers describe those decks and are not typical of a well-built model.}}
 
 {{sweep.para1}}
 
@@ -226,9 +294,46 @@ A reviewer pointed out that those paragraphs account for {{sw.cmp}} models out o
 
 The full equations had never seen the corpus, so version 1.2 ran them on a random 160. {{sw.swe}}
 
+## Asking HEC-RAS itself
+Everything so far compared this engine with arithmetic, with EPA's engine, with SWMM6 and with a solver written in the same session. None of that is HEC-RAS. The method came from HEC's pages, and a page is not a program. So Bob installed HEC-RAS 7.0.2 on his Windows machine, and we asked it.
+
+HEC ships a set of pipe network examples made from SWMM's own EXTRAN test decks, together with the SWMM files they came from and HEC's own result files. That is about as fair a meeting ground as you could ask for. HEC chose the decks, HEC built the RAS models, and HEC ran them first.
+
+The first job was to check the referee. Run the same five plans twice and you ought to get the same answer, and you do: all {{ras.ab}} result datasets matched to the last bit. Against the files HEC shipped, made with versions 7.0 and 7.0.1, heads agreed within {{ras.shiph}} ft and mid-pipe flows within {{ras.shipq}}% of peak away from the outfall. Changing nothing but the output interval moved RAS's own answer by up to {{ras.ivh}} ft. That is the noise floor, and a difference smaller than that is not a difference.
+
+Then the deck. A SWMM file and a RAS file can describe the same sewer in slightly different words, and if they disagree you will spend a week chasing a typo. So the SWMM deck was built from the geometry RAS stores in its own results file: every invert, length, roughness and diameter as RAS read them. Below the last node RAS has a 2D area where SWMM has an open channel, so RAS's water surface there became the outfall stage. Both engines ran diffusion wave with 100 ft cells and a Courant target of 0.9, and RASPIPE's mid-pipe flow was set against RAS's mid-pipe face, every minute, for six hours.
+
+{{table:rasscore}}
+
+On EXTRAN 1 RASPIPE's mean head difference came to {{ras.h_rp0}} ft, against {{ras.h_epa0}} ft for EPA 5.2.4 on the same deck. Closer, but not close enough. The pass band, written down before any run, asked for 90% of nodes and pipes to stay within 0.1 ft and 2% of peak at 90% of instants, and it missed.
+
+Three things carried most of the miss. One manhole, 80608, floods. RAS spills the overflow onto a 2D surface and lets the head climb to {{ras.peak80608}} ft, and SWMM stops it at the 135.0 ft rim. Raise that one rim to RAS's peak and the plateau head at 82309 agrees to the hundredth of a foot, {{ras.h82p}} against {{ras.h82r}}, with pipe 1602 carrying {{ras.q16p}} cfs against {{ras.q16r}}. The second is node 81009, where RASPIPE sits at {{ras.h81p}} ft, which is Manning's normal depth, and RAS sits at {{ras.h81r}}. We don't know why yet. The third was the interesting one.
+
+{{fig:ras|Figure 15. Head at node 82309 on HEC's EXTRAN 1, with the rim at 80608 matched. HEC-RAS 7.0.2's stored result is dashed. RASPIPE as in version 1.2 reaches the plateau up to {{ras.early}} minutes early. With 12.566 ft² of storage per full cell it rises with RAS, and both hold RAS's plateau to the hundredth of a foot.}}
+
+RASPIPE's three upper manholes rose through a level 2 ft below their plateau at {{ras.fillP}}. RAS's rose at {{ras.fillR}}. A lead of {{ras.early}} minutes is a long time in a storm sewer, and it is far too big to be noise.
+
+Here is what a full pipe does in this engine. Its cell table goes flat at the crown, so a full cell holds a fixed volume, and any more water has to go somewhere else, up a manhole, which here is a 12.566 ft² shaft. Fill three long pipes and the head jumps as much as {{ras.jump}} ft in two minutes. RAS's never climbed more than {{ras.rasrate}} ft in a minute. Something in RAS was storing water that this engine was not.
+
+The place to look was RAS's own bookkeeping. Its results file holds each cell's property table, and those tables end at the crown, just as ours do. So add up what went into the three upper pipes, take away what came out, and compare it with what their tables say they can hold. While they run full, {{ras.gap}} ft³ more water is in them than their tables allow. Divide by the head above the crowns, summed over the {{ras.n6}} full cells, and you get {{ras.r6}} ft² per cell per foot of head. On EXTRAN 2 it is {{ras.r2}}. When the pipes drain, the difference falls to almost nothing.
+
+{{fig:rasvol|Figure 16. Water in pipes 8040, 8060 and 1602 beyond what RAS's own cell tables hold, against 12.566 ft² times the summed head above the crown of each full cell. The two track each other through filling, the plateau and draining. This is read from RAS's results, not from its code or its manuals.}}
+
+That number rang a bell. EPA's default minimum surface area for a node, `MIN_SURFAREA`, is 12.566 ft², the plan area of a 4 ft manhole. It looks as though RAS gives every full pipe cell that much water surface above its crown. HEC's pages don't say so, and this is a reading of its results, not of its code. In slot terms it is a slit {{ras.slotw}} ft wide in a 100 ft cell, which in a 4 ft pipe makes a pressure wave run at about {{ras.c4}} ft/s. A real one runs at thousands.
+
+So engine 1.3 has a new option, `RASPIPE_PRESSURE_AREA`. Set it, and every full cell stores that plan area per foot of head above its crown, and each junction cell the same for every barrel of the highest pipe it borrows from. It is off by default, and with it off the engine writes what version 1.2 wrote: {{ras.null}}. With 12.566 the upper nodes rise at {{ras.fillS}}, within a minute of RAS, and the mean head difference on EXTRAN 1 falls from {{ras.h_rp}} to {{ras.h_pa}} ft with the rim matched, against EPA's {{ras.h_epa}}.
+
+A value tuned on one plan proves little on that plan. So it went, unchanged, onto the others.
+
+{{table:rasho}}
+
+EXTRAN 2 is the real test, a different storm through the same pipes, and it moved the same way, {{ras.x2_rp}} to {{ras.x2_pa}} ft. EXTRAN 4 never fills its pipes, so nothing changed, which is what ought to happen. EXTRAN 5 got a little worse in heads and a little better in flows, {{ras.x5_rp}} to {{ras.x5_pa}} ft, and its mean head errors of {{ras.x5_rp}} ft come from somewhere we have not traced. Every plan still misses the pass band. EXTRAN 7 is left out, because RAS runs its pump through a pump station and rules, and the deck builder doesn't translate those.
+
+Be clear about what this settles. It shows where this engine and HEC-RAS part company, and by how much. It does not say which of them is right about a real sewer. A pipe under pressure does store a little water, in the stretch of its walls and the squeeze of the water, but nowhere near this much. So the option stays off by default. If you want this engine to agree with HEC-RAS where pipes run full, turn it on. If you want a rigid pipe, leave it off.
+
 ## What this does not show
 - No field data appears anywhere in this work. Agreement with Manning, with a pump curve and with another solver shows the arithmetic is right. It says nothing about whether a model predicts a real sewer.
-- It has not been run against HEC-RAS. It uses the published method and may differ from HEC's code in any detail the manuals leave out.
+- HEC-RAS 7.0.2 has been run on four of HEC's own EXTRAN examples, on one Windows machine. Every plan misses the pass band set beforehand. Node 81009 and EXTRAN 5's 0.7 ft errors are not explained, and EXTRAN 7's pump is not tested. The full-pipe storage value is read from RAS's results, not from HEC's code or manuals, and it was set on EXTRAN 1.
 - Where the two engines disagree in the corpus, nobody has yet sorted out which is right, model by model. A few we looked at are startup transients in nearly dry pipes, and one is a sill control limiting a backflow that stock lets through.
 - A manhole here is a real tank up to its MaxDepth. EXTRAN stores nothing above the crown. A deck with a fake 1,000 ft MaxDepth gets 1,000 ft tanks. On one pressure network the heads now start at the outfall stage and sink slowly toward their steady values, and after 2 hours they are still on their way, where stock sits at steady head from the first step.
 - A conduit holds one concentration, as in EPA's code, while its flow now varies along the cells. {{sweep.qnote}}
@@ -243,6 +348,9 @@ The full equations had never seen the corpus, so version 1.2 ran them on a rando
 - The wave reference was written in the same AI session as the engine. It shares no code, and it could share a mistaken idea.
 - The full equations have run on 160 corpus models, against 1,466 for diffusion wave.
 - The slot finding is one term by term test on one deck.
+- SWMM6 is alpha software, moving fast, and the browser build is from October 17. The comparison uses eight small decks and a random sample. The FV shortfall on full pipes is an open question, not a diagnosis.
+- The `SEMI_IMPLICIT` test patch is a diagnostic in a private copy, and it makes the box flow ring. Its cause is traced on some decks and not on `pump_exam`. Virtual junctions and TPA, the cases the manual recommends it for, were not tested.
+- No HEC-RAS, SWMM6 or EPA developer has looked at this comparison.
 - The defect list above is what the sample found. The other 2,900 models in the local corpus have not been run on the final engine.
 - No person has reviewed this code yet.
 
@@ -251,8 +359,12 @@ The full equations had never seen the corpus, so version 1.2 ran them on a rando
 2. Run at your usual `ROUTING_STEP`. The pipes keep their own clock at a target Courant number of 0.9, and `RASPIPE_COURANT` changes it. If instability shows up, lower the target before you touch the step for the whole model. `RASPIPE_COURANT 0` turns it off.
 3. Set `RASPIPE_CELL_LENGTH`, and raise `RASPIPE_MAX_CELLS` for long pipes. Run it twice, halving the cell length, and watch whether your answer moves. If it moves, you were not done.
 4. Read the RASPIPE block near the end of the report. It gives the build, the mesh you really got, how many conduits hit the cell limit, the pipe steps, the largest Courant number, the volume ledger and any steps left unsolved.
-5. Use `RASPIPE_EQUATIONS SWE` when inertia matters. Try `RASPIPE_THETA 0.6` with it when a sharp front matters, and hold the step down if you do. Water loses a velocity head at any junction of three or more pipes.
+5. Tick the SWMM6 lines to add its modified dynamic wave and FV to any run. Use `RASPIPE_EQUATIONS SWE` when inertia matters. Try `RASPIPE_THETA 0.6` with it when a sharp front matters, and hold the step down if you do. Water loses a velocity head at any junction of three or more pipes.
 6. If the first minutes throw a spike, try `RASPIPE_WARMUP 60`. Stage boundaries already project up the pipes, and `RASPIPE_INITIAL_STAGE NO` turns that off.
+7. To agree with HEC-RAS where pipes run full, add `RASPIPE_PRESSURE_AREA 12.566`. Leave it out for a rigid pipe.
+
+## Related apps
+{{related}}
 
 ## Use of AI
 {{aiuse}}

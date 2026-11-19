@@ -98,6 +98,7 @@ char* OptionWords[]        = { w_FLOW_UNITS,        w_INFIL_MODEL,
                                w_RASPIPE_CELL,      w_RASPIPE_MAXCELLS,
                                w_RASPIPE_NESTED,    w_RASPIPE_COURANT,
                                w_RASPIPE_STAGE,     w_RASPIPE_WARMUP,
+                               w_RASPIPE_PRESSAREA,
                                NULL };
 char* OrificeTypeWords[]   = { w_SIDE, w_BOTTOM, NULL};
 char* OutfallTypeWords[]   = { w_FREE, w_NORMAL, w_FIXED, w_TIDAL,

@@ -1,0 +1,90 @@
+{
+ "unique": "As software, it is not unique. HEC-RAS 7.0.2, InfoWorks ICM and SWMM6's finite volume solver all cut pipes into cells. What this app adds is content. As far as we know it is the only place HEC's published slot-free pipe method runs inside EPA SWMM 5.2.4, in a browser, beside EPA's solver and two SWMM6 solvers on one .inp file. It also carries the only published check of that method against HEC-RAS 7.0.2 on HEC's own EXTRAN decks that we have found, and that check turned up something HEC's pages don't state: RAS stores water above the crown of a full pipe. Bob's Four-Engine Pipe Comparator compares these engines on paper; this page runs three of them.",
+ "summaries": {
+  "one_sentence": "SWMM5 RASPIPE runs HEC-RAS's slot-free pipe method inside EPA SWMM 5.2.4, and on HEC's own EXTRAN 1 its mean head difference from HEC-RAS 7.0.2 is {{ras.h_rp}} ft, against {{ras.h_epa}} ft for EPA's dynamic wave.",
+  "one_paragraph": "SWMM5 RASPIPE is EPA SWMM 5.2.4 with one new solver file. Write FLOW_ROUTING RASPIPE and each conduit becomes a row of cells whose volume tables go flat at the crown, so a full pipe needs no Preissmann slot, and the whole network is solved at once with a nested Newton iteration. It reproduces Manning in a full pipe, a pump curve, Stoker's dam break, and a U-tube period of {{ut.rp}} s against an exact {{ut.T}} s, and it has run a random sample of the 1729 corpus. On four of HEC's EXTRAN examples it comes closer to HEC-RAS 7.0.2 than EPA's dynamic wave does, though every plan misses the pass band set beforehand. There is no field data.",
+  "one_page": [
+   "A full pipe has no free surface, and the equations sewer models are built on need one. For sixty years models have dealt with that by cutting an imaginary slot in the crown, as Preissmann and Cunge proposed in 1961, or by switching rules at the crown, as EXTRAN does. HEC-RAS used the slot through version 6.5, then replaced it with a method Vincenzo Casulli and Guus Stelling published in 2013. SWMM5 RASPIPE asks what happens when that method runs inside EPA SWMM 5.2.4.",
+   "Each conduit is cut into cells, about 100 ft long by default. Levels live in cells and flows on faces, and a manhole cell borrows a piece of every pipe that meets it. A closed cell's volume table goes flat at the crown, so above it the level is simply the crown plus the pressure head. That flat stretch defeats plain Newton, so the slope of the table is split into rising and falling parts and solved with two nested loops, the whole network at once as one sparse matrix. HEC's adaptive time step gives the pipes their own clock inside SWMM's routing step.",
+   "Claude wrote the solver from HEC's public manuals and the papers they cite, at Bob Dickinson's direction. Hydrology, controls and the .out file are EPA's code, and without the keyword the engine is EPA 5.2.4, byte for byte. The same C compiles to WebAssembly, so this page runs EPA, RASPIPE and two SWMM6 solvers on your .inp file in the browser.",
+   "It reproduces Manning in full pipes, a pump curve to {{pump.rp}} cfs against a pencil answer of {{pump.exact}}, Stoker's dam break with a bore speed error of {{st.v126}}% at θ = 0.6, and a U-tube period of {{ut.rp}} s against {{ut.T}}. Then came HEC-RAS 7.0.2 itself, on HEC's own EXTRAN examples. On EXTRAN 1, with the flooded rim matched, RASPIPE's mean head difference is {{ras.h_rp}} ft, against {{ras.h_epa}} ft for EPA's dynamic wave.",
+   "What remained was timing. RASPIPE's upper manholes filled up to {{ras.early}} minutes early, and RAS's own cell tables showed why: while its pipes run full, RAS holds {{ras.r6}} ft² of extra storage per cell per foot of head, which HEC's pages don't mention. A new option, RASPIPE_PRESSURE_AREA, supplies it. It is off by default, and with it on the mean head difference falls to {{ras.h_pa}} ft.",
+   "Every HEC-RAS plan still misses the pass band set beforehand. Node 81009 and EXTRAN 5 are not explained, there is no field data, and no person has reviewed the code. To try it, put FLOW_ROUTING RASPIPE in [OPTIONS], halve the cell length once to see whether your answer moves, and read the RASPIPE block near the end of the report."
+  ],
+  "one_page_image": {
+   "fig": "ras",
+   "after": 3,
+   "caption": "Head at node 82309 on EXTRAN 1. HEC-RAS 7.0.2 is dashed. With 12.566 ft² per full cell RASPIPE rises with it, and the mean head difference falls from {{ras.h_rp}} to {{ras.h_pa}} ft."
+  },
+  "sections": {
+   "What is unique about this app": "As software it is not unique; what it carries is.",
+   "The trouble with a full pipe": "A full pipe has no free surface, and the two old ways around that, the slot and EXTRAN's switch at the crown, each keep books that can slip.",
+   "What this engine is": "One keyword turns EPA SWMM 5.2.4's dynamic wave into a semi-implicit cell solver built from HEC's published method, and without it the engine is EPA's, byte for byte.",
+   "Cut the pipe into cells": "Each conduit becomes a row of cells holding levels and faces holding flows, and a manhole cell borrows a piece of every pipe that meets it.",
+   "The table that goes flat": "A closed cell's volume stops growing at the crown, and splitting its slope into rising and falling parts lets nested Newton solve it safely.",
+   "One equation for every cell": "Each cell's balance takes in the implicit flows on its faces, so the whole network is one sparse matrix solved at once.",
+   "What sits on the faces": "Sills, free outfalls and SWMM's own orifices, weirs, outlets and pumps act on faces, and an outfall depth taken from the last flow once reported 732,000 cfs.",
+   "Where this departs from HEC": "HEC's pages give the equations, and this section names each choice this engine made for itself.",
+   "What was tested": "Each test carries a label for the kind of evidence it is, and the slot's pump error traces to two terms in EPA's dwflow.c.",
+   "Problems nobody here wrote": "Stoker's dam break and a U-tube have answers that predate this work, and stock SWMM ran the U-tube 18% long with continuity at 0.000%.",
+   "One cause at a time": "Against a separate Saint-Venant solver, the mesh is the biggest lever on the wave's peak, then the true time step, then dropping inertia.",
+   "Bringing in SWMM6": "On the same plain decks SWMM6 FV and RASPIPE agree on the dam break, and FV's steady flow in a full pipe moves with its slot celerity.",
+   "Where the water went": "SWMM6's SEMI_IMPLICIT node update leaves water off the ledger while heads move, and a test switch shows where it goes without fixing it.",
+   "What the corpus did to it": "Sorting the corpus sample worst first found nine defects that no textbook problem had touched.",
+   "A clock for the pipes": "HEC's adaptive time step, start-up stage and warm up gave the pipes their own clock and starved the defect that had survived version 1.0.",
+   "The final count": "Diffusion wave did not change in version 1.2, so the corpus numbers carry over, and the sweep reports what happened to every model, not only the ones that finished.",
+   "Asking HEC-RAS itself": "On HEC's own EXTRAN decks RASPIPE comes closer to HEC-RAS 7.0.2 than EPA's dynamic wave does, and the gap that was left showed that RAS stores water above the crown of a full pipe.",
+   "What this does not show": "No field data, four HEC-RAS plans on one machine, and no person has reviewed the code.",
+   "How to use it": "One keyword turns it on; then set the cell length, read the RASPIPE block in the report, and add full-pipe storage only to agree with HEC-RAS.",
+   "Related apps": "Bob's other apps on the same engines and the same comparisons.",
+   "Use of AI": "Claude wrote the engine, the tests, the page and this essay at Bob's direction, and no person has reviewed the code.",
+   "Sources": "HEC's manuals, the papers they cite, and the engines and data this page runs.",
+   "Answers to the opening questions": "Each opening question, answered from the body with its number.",
+   "How complex is this app": "Measured with the SWMM App Complexity Meter, the source behind this page scores {{cx.index}} where the HydroCouple organization scores 100."
+  }
+ },
+ "questions": [
+  {
+   "q": "A closed pipe cell's volume table goes flat at the crown. Why does that remove the need for a slot, and why does the same flat stretch trouble Newton's method?",
+   "a": "Above the crown the level no longer changes the volume, so the level is free to be whatever the pressure says: the crown plus P/γ, with no imaginary slit holding water that isn't there. Newton's method divides by the slope of the volume table, and that slope is zero there. Splitting the slope into the running sums of its rises and falls, T = T1 − T2, makes V = V1 − V2 with neither piece curving downward, and two nested loops solve the pieces safely. Forcing the nested path on every solve moved a 59 cfs peak by {{nest.diff}} cfs."
+  },
+  {
+   "q": "On HEC's EXTRAN 1, RASPIPE's upper manholes rose to their plateau minutes before HEC-RAS's did, yet held the same plateau head. What would you measure to find out why?",
+   "a": "RAS's own bookkeeping. Its cell tables end at the crown, so the water that went into pipes 8040, 8060 and 1602, less what came out, ought to equal what those tables hold. While the pipes run full it exceeds them by {{ras.gap}} ft³, or {{ras.r6}} ft² per full cell per foot of head, close to EPA's 12.566 ft² MIN_SURFAREA. RASPIPE gave a full cell no such storage, so its heads rose up to {{ras.early}} minutes early. RASPIPE_PRESSURE_AREA 12.566 brings the rise within a minute and the mean head difference from {{ras.h_rp}} to {{ras.h_pa}} ft."
+  },
+  {
+   "q": "Stock SWMM ran the U-tube's period 18% long while its routing continuity read 0.000%. How can both be true?",
+   "a": "Continuity balances over a full swing, so a model can store water in the wrong place and still close its books. EXTRAN gives a full pipe a free surface at 96% of its depth and hands half of that width times the length to each end node, 392 ft² of water surface that isn't there on a 1,000 ft² tank. The period then grows by the square root of 1.392, which predicts {{ut.pred}} s, and the run gave {{ut.epa}}. Zero that area in a test copy and the period drops to {{ut.fix}} s."
+  },
+  {
+   "q": "With RASPIPE_PRESSURE_AREA on, RASPIPE agrees better with HEC-RAS. Does that make it more accurate?",
+   "a": "No. It makes it agree. The storage is read from RAS's results, not from physics or from HEC's manuals, and it amounts to a slot {{ras.slotw}} ft wide in a 100 ft cell, a pressure wave of about {{ras.c4}} ft/s in a 4 ft pipe, where a real one runs at thousands. No field data appears anywhere in this work, and every HEC-RAS plan still misses the pass band. That is why the option is off by default."
+  }
+ ],
+ "related": [
+  {
+   "t": "Four-Engine Pipe Comparator",
+   "url": "https://four-engine-comparison.netlify.app/",
+   "where": "Netlify",
+   "why": "HEC-RAS pipes, InfoWorks ICM, EPA SWMM5 and OpenSWMM 6 side by side, with benchmark decks to run in each."
+  },
+  {
+   "t": "How OpenSWMM Solves Finite Volume",
+   "url": "https://claude.ai/artifact/D78wGswvgLQNpt1ixXejGE",
+   "where": "Claude artifact",
+   "why": "The explicit finite volume solver that runs here as SWMM6 FV, explained from its source."
+  },
+  {
+   "t": "Seven SWMM Engines",
+   "url": "https://claude.ai/artifact/JPA8SNkMHsngmP5LA93nv2",
+   "where": "Claude artifact",
+   "why": "One .inp through EPA 5.2.4, four OpenSWMM 6 builds, SWMM 4.4H and EXTRAN III; the source of this page's SWMM6 engine."
+  },
+  {
+   "t": "SWMM6 Anderson acceleration",
+   "url": "",
+   "where": "Netlify project swmm6-anderson-acceleration",
+   "why": "Anderson acceleration is one of the three options that make up the SWMM6 modified dynamic wave compared here."
+  }
+ ]
+}

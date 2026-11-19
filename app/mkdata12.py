@@ -189,6 +189,7 @@ sources[:]=data['sources']
 data['aiuse']=aiuse
 s_=data['sweep']
 data['headline']=(f"<b>Dam break:</b> exact bore {ex['S']:.2f} ft/s, v1.1 {fr('v1.1 implicit upwind, theta 1',5)['speed']:.2f}, v1.2 {fr('v1.2, theta 1',5)['speed']:.2f} at θ 1 and {fr('v1.2, theta 0.6',5)['speed']:.2f} at θ 0.6. <b>U-tube:</b> exact period {T0:.1f} s, RASPIPE {uf('RASPIPE SWE, theta 0.6',2)['T']:.1f}, EPA {ep['T']:.1f}. <b>Pump into a full pipe:</b> pencil {pv['exact']:.3f} cfs, RASPIPE {pv['rp']:.3f}, EPA EXTRAN {pv['extran']:.3f}, SLOT {pv['slot']:.3f}. <b>Null control:</b> <code>.out</code> identical to EPA 5.2.4 with the keyword off. Build <code>{BUILD}</code>.")
+exec(open(R+'/app/mkdata13.py').read())
 # --- manifest for the zip
 man=[]
 for r in data['verify']:

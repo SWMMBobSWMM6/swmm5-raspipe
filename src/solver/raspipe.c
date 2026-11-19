@@ -2,7 +2,7 @@
 //   raspipe.c
 //
 //   Project:  SWMM5 RASPIPE, a fork of EPA SWMM 5.2.4
-//   Version:  1.2
+//   Version:  1.3
 //   AI use:   Code written by Claude, Anthropic's AI model, in November 2026, at
 //             the direction of R. Dickinson, who is responsible for it. No person
 //             has reviewed it yet. See README.md.
@@ -1324,7 +1324,7 @@ static void buildNodeTable(int i)
     TCell  *c = &Cell[i];
     TTab   *t = &Tabs[Ntabs++];
     TPiece *q;
-    double  zlo, zhi, top, d, v;
+    double  zlo, zhi, top, d, v, crown = -1.0e30, bar = 0.0;
     double *e;
     int     n = 0, cap = 64, m, k, pc;
 
@@ -1351,6 +1351,7 @@ static void buildNodeTable(int i)
         k = MAX(k, 8);
         k = MIN(k, 64);
         for (m = 0; m <= k; m++) ADDE(zlo + (zhi - zlo + d) * m / k);
+        if (zhi + d > crown) { crown = zhi + d; bar = Pipe[q->pipe].barrels; }
     }
     qsort(e, n, sizeof(double), dblCmp);
     for (m = k = 0; m < n; m++)
@@ -1362,6 +1363,8 @@ static void buildNodeTable(int i)
     {
         t->e[m] = e[m];
         v = shaftV(i, e[m]) + piecesV(i, e[m]);
+        if (RasPipePressArea > 0.0 && e[m] > crown)
+            v += RasPipePressArea * bar * (e[m] - crown);
         if (!c->canPond && e[m] > top) v += TFLOOD * (e[m] - top);
         t->v[m] = v;
     }
@@ -1387,7 +1390,9 @@ static void buildPipeTable(TPipe *p)
         t->v[m] = pieceV(p, t->e[m], -0.5 * dz, 0.5 * dz, p->delta) * p->barrels;
     }
     t->v[0] = 0.0;
-    tabSplit(t, 0.0);
+    // --- RASPIPE_PRESSURE_AREA: once the cell is full, each foot of head above
+    //     its crown stores this much more water (0 = none, the slot-free default)
+    tabSplit(t, RasPipePressArea * p->barrels);
     for (m = 0; m < p->nc; m++)
     {
         Cell[p->c0 + m].tab = t;
@@ -2371,10 +2376,13 @@ void raspipe_close(void)
         fprintf(Frpt.file, "\n  *******************");
         fprintf(Frpt.file, "\n  RASPIPE Pipe Solver");
         fprintf(Frpt.file, "\n  *******************");
-        fprintf(Frpt.file, "\n  Version ................. 1.2 build %s", RASPIPE_BUILD);
+        fprintf(Frpt.file, "\n  Version ................. 1.3 build %s", RASPIPE_BUILD);
         fprintf(Frpt.file, "\n  Equations ............... %s",
             RasPipeEqn == RASPIPE_DW ? "diffusion wave" : "full shallow water");
         fprintf(Frpt.file, "\n  Theta ................... %.3f", RasPipeTheta);
+        if (RasPipePressArea > 0.0)
+            fprintf(Frpt.file, "\n  Full pipe cell area ..... %.3f per cell",
+                RasPipePressArea * UCF(LENGTH) * UCF(LENGTH));
         fprintf(Frpt.file, "\n  Cell length ............. %.2f",
             RasPipeCellLen * UCF(LENGTH));
         {

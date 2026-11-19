@@ -116,6 +116,7 @@ EXTERN double
                   RasPipeTheta,             // RASPIPE implicit weighting
                   RasPipeCellLen,           // RASPIPE target cell length (ft)
                   RasPipeCourant,           // RASPIPE target Courant, 0 = off
+                  RasPipePressArea,         // RASPIPE storage per full pipe cell (ft2)
                   MinSlope,                 // Minimum conduit slope
                   RunoffError,              // Runoff continuity error
                   GwaterError,              // Groundwater continuity error
