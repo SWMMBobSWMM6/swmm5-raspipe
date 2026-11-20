@@ -4,7 +4,7 @@ file: SWMM5-RASPIPE.html
 version: 1.4.0
 date: 2026-11-19
 author: Robert Dickinson
-links: {artifact: "https://claude.ai/artifact/3zBb9jAAvucjovoDtCFcCo", netlify: none, repo: "github.com/SWMMBobSWMM6/swmm5-raspipe (not yet updated to 1.4)"}
+links: {artifact: "https://claude.ai/artifact/3zBb9jAAvucjovoDtCFcCo", netlify: none, repo: "https://github.com/SWMMBobSWMM6/swmm5-raspipe"}
 engines:
   - {name: EPA SWMM, version: 5.2.4, source: commit 7952ca8, license: public domain}
   - {name: RASPIPE, version: 1.3, file: src/solver/raspipe.c, build: 239a0d3a930f, license: public domain additions}

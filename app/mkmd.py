@@ -17,7 +17,7 @@ def make(data, val, CX, S1, S2, date, version='1.4.0'):
     a(f'version: {version}')
     a(f'date: {date}')
     a('author: Robert Dickinson')
-    a('links: {artifact: "https://claude.ai/artifact/3zBb9jAAvucjovoDtCFcCo", netlify: none, repo: "github.com/SWMMBobSWMM6/swmm5-raspipe (not yet updated to 1.4)"}')
+    a('links: {artifact: "https://claude.ai/artifact/3zBb9jAAvucjovoDtCFcCo", netlify: none, repo: "https://github.com/SWMMBobSWMM6/swmm5-raspipe"}')
     a('engines:')
     a('  - {name: EPA SWMM, version: 5.2.4, source: commit 7952ca8, license: public domain}')
     a(f'  - {{name: RASPIPE, version: 1.3, file: src/solver/raspipe.c, build: {B13}, license: public domain additions}}')
