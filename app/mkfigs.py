@@ -203,3 +203,24 @@ def fig_budget(rows):
     return svg(W,H,b,'Bars of peak error by cause')
 def more_figs(pump,slot,bench,rows):
     return dict(slot=fig_slot(pump,slot),stoker=fig_stoker(bench),utube=fig_utube(bench),budget=fig_budget(rows))
+
+def fig_sixdam(c):
+    ser=lambda k,col,**o:dict(x=c[k]['x'],y=c[k]['h'],c=col,**o)
+    return chart(760,320,[ser('exact','s4',w=4.5),ser('ex5','s1'),ser('s6dw','s5'),ser('s6fv2','s3'),ser('rpsw','s2')],'Distance along the pipe (ft)','Depth (ft)',(0,4000),(0,11),label='Dam break through 200 short conduits, every engine against the exact solution',labels=[(2500,10.0,'exact (wide line)','s4'),(2500,9.1,'EPA 5.2.4 EXTRAN','s1'),(2500,8.2,'SWMM6 modified DW','s5'),(2500,7.3,'SWMM6 FV','s3'),(2500,6.4,'RASPIPE full equations','s2')])
+
+def fig_shortbox(S):
+    x=[(i+1)*5/60 for i in range(len(S['EPA 1 s']['c2']))]
+    return chart(760,320,[dict(x=x,y=S['EPA 1 s']['c2'],c='s4',w=4.5),dict(x=x,y=S['modDW 30 s']['c2'],c='s5'),dict(x=x,y=S['patched semi 30 s']['c2'],c='s3')],'Hours','Flow in the pipe below the box (cfs)',(0,12),(0,1.3),label='Flow below the short wide box',labels=[(6.2,.42,'EPA at a 1 s step (wide line)','s4'),(6.2,.31,'SWMM6 modified DW at 30 s','s5'),(6.2,.20,'SEMI_IMPLICIT with the test patch at 30 s','s3')])
+
+def fig_ras(S):
+    "Head at 82309, HEC-RAS 7.0.2 against RASPIPE with and without full-pipe storage and EPA, EXTRAN 1, rim matched."
+    k=[i for i,t in enumerate(S['t']) if .3<=t<=3.6]; g=lambda a:[a[i] for i in k]; x=g(S['t'])
+    return chart(760,330,[dict(x=x,y=g(S['epa']),c='s1'),dict(x=x,y=g(S['rp']),c='s2'),dict(x=x,y=g(S['pa']),c='s3'),dict(x=x,y=g(S['ras']),c='s4',w=3.2,dash='7 4')],
+      'Hours from the start of the run','Head at node 82309 (ft)',(.3,3.6),(110,136),label='Head at node 82309 against time, HEC-RAS 7.0.2 against RASPIPE and EPA',
+      labels=[(1.55,126.5,'HEC-RAS 7.0.2 (dashed)','s4'),(1.55,124.2,'RASPIPE, 12.566 ft² per full cell','s3'),(1.55,121.9,'RASPIPE, no full-pipe storage','s2'),(1.55,119.6,'EPA 5.2.4 DYNWAVE','s1')])
+def fig_rasvol(V):
+    "Water in pipes 8040, 8060 and 1602 beyond RAS's own cell tables, against 12.566 x the summed head above the crowns."
+    k=[i for i,m in enumerate(V['m']) if m<=240]; x=[V['m'][i]/60 for i in k]
+    return chart(760,300,[dict(x=x,y=[12.566*V['over'][i] for i in k],c='s2',w=2.4),dict(x=x,y=[V['gap'][i] for i in k],c='s4',w=3,pts=1)],
+      'Hours from the start of the run','Volume (ft³)',(0.4,4),(-1000,12000),label="Volume RAS holds beyond its own cell tables, against 12.566 times the head above the crowns",
+      labels=[(0.95,6200,'Inflow minus outflow, less what RAS’s tables hold (dots)','s4'),(0.95,4600,'12.566 ft² × summed head above the crown of each full cell','s2')])

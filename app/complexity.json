@@ -1,0 +1,120 @@
+{
+ "analyzer": "1.7.0",
+ "baseline": "HC-2026-11-10-h",
+ "files": [
+  "engine/src/solver/raspipe.c",
+  "app/app.src.html",
+  "app/tools/complexity.js",
+  "app/mkdata.py",
+  "app/mkdata12.py",
+  "app/mkdata13.py",
+  "app/mkdata14.py",
+  "app/mkfigs.py",
+  "app/build.py",
+  "app/mkdocx.js",
+  "app/mkzip.py",
+  "app/mkmd.py",
+  "tests/bench1.py",
+  "tests/bench2.py",
+  "tests/bench3.py",
+  "tests/bench4.py",
+  "tests/dwsame.py",
+  "tests/gen.py",
+  "tests/gen2.py",
+  "tests/outread.py",
+  "tests/refsol.py",
+  "tests/same12.py",
+  "tests/semi_matrix.py",
+  "tests/tabs15.py",
+  "tests/verify.py",
+  "tests/wave.py",
+  "tests/wave2.py",
+  "tests/wave3.py",
+  "hecras/cmp/app14.py",
+  "hecras/cmp/cmp1.py",
+  "hecras/cmp/cmp13.py",
+  "hecras/cmp/mkdeck_extran.py",
+  "hecras/cmp/rasread.py",
+  "hecras/cmp/rasvol.py",
+  "hecras/cmp/rasvol2.py",
+  "hecras/cmp/rerun14.py",
+  "build13.sh",
+  "wasm/build13.sh",
+  "wasm/runwasi.mjs"
+ ],
+ "nfiles": 39,
+ "index": 65.4,
+ "groups": {
+  "size": 55.2,
+  "structure": 74,
+  "tests": 20.3,
+  "swmm": 83.8
+ },
+ "rows": [
+  {
+   "key": "bulk",
+   "name": "Bulk",
+   "value": 104725,
+   "anchor": 6607205,
+   "score": 55.1
+  },
+  {
+   "key": "branches",
+   "name": "Decisions",
+   "value": 2081,
+   "anchor": 123080,
+   "score": 55.8
+  },
+  {
+   "key": "routines",
+   "name": "Routines",
+   "value": 633,
+   "anchor": 38818,
+   "score": 55.4
+  },
+  {
+   "key": "checks",
+   "name": "Test markers",
+   "value": 15,
+   "anchor": 27339,
+   "score": 20.3
+  },
+  {
+   "key": "stack",
+   "name": "Stack",
+   "value": 16.998,
+   "anchor": 31.573,
+   "score": 93.3
+  },
+  {
+   "key": "dependencies",
+   "name": "Dependencies",
+   "value": 8,
+   "anchor": 77,
+   "score": 75.4
+  },
+  {
+   "key": "formats",
+   "name": "Formats",
+   "value": 17,
+   "anchor": 43,
+   "score": 89.9
+  },
+  {
+   "key": "swmm",
+   "name": "SWMM vocabulary",
+   "value": 51,
+   "anchor": 226,
+   "score": 83.8
+  }
+ ],
+ "shipped": {
+  "index": 56.4,
+  "groups": {
+   "size": 51.8,
+   "structure": 63.2,
+   "tests": 0,
+   "swmm": 79.1
+  }
+ }
+}

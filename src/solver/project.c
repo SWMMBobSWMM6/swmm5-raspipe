@@ -796,6 +796,11 @@ int project_readOption(char* s1, char* s2)
           RasPipeInitStage = !match(s2, "NO");
           break;
 
+      case RASPIPE_PRESSAREA:
+          if ( !getDouble(s2, &RasPipePressArea) || RasPipePressArea < 0.0 )
+              return error_setInpError(ERR_NUMBER, s2);
+          break;
+
       case RASPIPE_WARMUP:
           m = atoi(s2);
           if ( m < 0 ) return error_setInpError(ERR_NUMBER, s2);
@@ -901,6 +906,7 @@ void setDefaults()
    RasPipeCourant  = 0.9;              // HEC's default target
    RasPipeInitStage = TRUE;            // HEC's default for stage boundaries
    RasPipeWarmup   = 0;                // No warm up period
+   RasPipePressArea = 0.0;             // No storage in a full pipe cell
    CrownCutoff     = 0.96;             // Fractional pipe crown cutoff 
    AllowPonding    = FALSE;            // No ponding at nodes
    InertDamping    = PARTIAL_DAMPING;  // Partial inertial damping

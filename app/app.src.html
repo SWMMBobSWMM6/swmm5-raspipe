@@ -1,6 +1,7 @@
 <title>SWMM5 RASPIPE</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="color-scheme" content="dark light">
+<link rel="alternate" type="text/markdown" href="SWMM5-RASPIPE.md" title="Technical summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -121,9 +122,13 @@ input[type=file]{font-size:13px;width:100%;color:var(--ink-dim)}
 .tile .v1{font-size:15px;color:var(--s1)}
 .tile .v2{font-size:15px;color:var(--s2);font-weight:600}
 .tile .v0{font-size:15px;color:var(--ink-strong)}
+.tile .v5{font-size:15px;color:var(--s5);font-weight:600}
+.tile .v3{font-size:15px;color:var(--s3);font-weight:600}
+.ctl label.chk{display:flex;justify-content:flex-start;gap:8px;align-items:center;font-size:14px;margin:3px 0;font-weight:400}
 .tile i{font-style:normal;font-size:11px;color:var(--ink-faint);display:block}
 
 .tiles.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+#mT .tile:first-child{grid-column:1/-1}
 @media (max-width:900px){.tiles.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 h4{font-size:15px;font-weight:600;color:var(--head);margin:20px 0 6px}
 #rec{overflow-wrap:anywhere}
@@ -150,6 +155,11 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .doc ul,.doc ol{margin:0 0 12px;padding-left:22px;line-height:1.6}
 .doc figure{margin:16px 0 20px}
 .doc figcaption{font-size:13px;color:var(--ink-dim);margin-top:6px;line-height:1.5}
+.doc .lede1{margin:-2px 0 12px;color:var(--ink-dim)}
+.doc .sum3{margin:18px 0 8px;padding:6px 18px 10px}
+.doc .sum3 .dh3{margin:16px 0 6px;color:inherit}
+.doc .sum3 figcaption{color:inherit}
+.doc .sum3 figure{background:var(--bg);border-radius:8px;padding:8px}
 .doc .eq{font-family:var(--mono);font-size:13px;background:var(--panel);color:var(--panel-ink);border:1px solid var(--panel-line);border-radius:8px;padding:8px 12px;margin:0 0 12px;overflow-x:auto;white-space:pre}
 .doc pre{font-family:var(--mono);font-size:13px;background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:10px 12px;overflow-x:auto;margin:0 0 12px}
 .toc{display:flex;flex-direction:column;gap:2px;font-size:13px;margin:12px 0 0}
@@ -190,7 +200,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 <main>
 <!-- RUN -->
 <section class="pane" id="p-run" role="tabpanel" aria-labelledby="t-run">
-  <div class="box panel intro" data-intro><span><b>Run.</b> Both engines below are the same WebAssembly file running in your browser. One keyword decides the solver. Pick a model or load your own, change the mesh, and compare stock DYNWAVE with RASPIPE on any conduit or node.</span><button>Hide</button></div>
+  <div class="box panel intro" data-intro><span><b>Run.</b> EPA 5.2.4 and RASPIPE are one WebAssembly file, and a keyword picks the solver. SWMM6 is a second engine alongside it, run with its modified dynamic wave and its finite volume solver. All of it runs in your browser. Pick a model or load your own, change the mesh, and compare them on any conduit or node. The EXTRAN 1 sample also carries HEC-RAS 7.0.2’s own stored result as a dashed line.</span><button>Hide</button></div>
   <div class="grid" id="drop">
     <aside class="card">
       <div class="ctl"><label for="preset">Reproduce a published case</label><select id="preset"><option value="">Choose a case</option></select><small id="presetNote">Sets the model and every control below, then runs.</small></div>
@@ -203,9 +213,12 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
       <div class="ctl"><label for="cour">Target Courant <output id="courO"></output></label><input type="range" id="cour" min="0" max="2" step="0.1" value="0.9"><small>HEC's default is 0.9. RASPIPE runs as many pipe steps inside a routing step as this needs. 0 turns it off.</small></div>
       <div class="ctl"><label for="warm">Warm up steps <output id="warmO"></output></label><input type="range" id="warm" min="0" max="120" step="10" value="0"><small>Inflows ramp over the first 2/3, before the clock starts. HEC asks for 30 or more.</small></div>
       <div class="ctl"><span class="lbl">Project outfall stage at the start</span><div class="seg" id="stg" role="group" aria-label="Project outfall stage"><button data-v="YES" class="on">Yes</button><button data-v="NO">No</button></div></div>
+      <div class="ctl"><label for="pa">Storage in a full pipe cell</label><select id="pa"><option value="0">None, a full pipe is rigid (the default)</option><option value="12.566">12.566 ft² per cell, what HEC-RAS 7.0.2 held on EXTRAN 1</option><option value="50.27">50.27 ft² per cell, four times that</option></select><small>Writes <code>RASPIPE_PRESSURE_AREA</code>, new in engine 1.3. Water above the crown of a full cell is stored on this plan area, so heads rise more slowly once pipes run full. In an SI model the same area is written in m².</small></div>
       <div class="ctl"><label for="dt">Routing step</label><select id="dt"><option value="">As in the model</option><option>1</option><option>5</option><option>15</option><option>30</option><option>60</option></select><small>Applies to RASPIPE only. With VARIABLE_STEP on, the step stays at 15 s or less while water is moving, and stretches to ROUTING_STEP when the Courant target allows it.</small></div>
+      <div class="ctl"><span class="lbl" style="display:block">SWMM6 lines</span><label class="chk"><input type="checkbox" id="s6dw" checked> SWMM6 modified DW</label><label class="chk"><input type="checkbox" id="s6fv" checked> SWMM6 FV</label><label class="chk"><input type="checkbox" id="s6si" checked> SEMI_IMPLICIT in modified DW</label><small>OpenSWMM 6.0.0-alpha.4. Modified DW is DYNWAVE with DYNAMIC_SLOT, SEMI_IMPLICIT and ANDERSON_ACCEL. Untick SEMI_IMPLICIT to see what that option does, the Verify tab explains why you might. FV is the explicit finite volume solver. Both use the routing step in the model.</small></div>
+      <div class="ctl"><label for="fvm">SWMM6 FV mesh</label><select id="fvm"><option value="match">Same cell length as RASPIPE, second order</option><option value="def">SWMM6 defaults: 4 cells a conduit, first order</option></select></div>
       <div class="ctl"><label for="vs">Variable step</label><select id="vs"><option value="">As in the model</option><option value="0">0 (off)</option><option value="0.75">0.75</option></select><small>Applies to RASPIPE only. Off holds the routing step you asked for, which is what a time step study needs.</small></div>
-      <button class="primary" id="runBtn">Run both engines</button>
+      <button class="primary" id="runBtn">Run the engines</button>
       <div class="row" style="margin-top:8px"><button class="ghost" id="stopBtn" hidden>Stop</button><button class="ghost" id="inpBtn">Save the .inp of this run</button></div>
       <div class="row" style="margin-top:8px"><span class="chip ok" id="badge" hidden></span></div>
       <div class="status" id="status" aria-live="polite"></div>
@@ -223,8 +236,8 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
             <select id="elem" aria-label="Element" style="width:auto;max-width:180px"></select>
           </div>
         </div>
-        <svg class="chart" id="chart" viewBox="0 0 800 340" role="img" aria-label="Hydrograph comparing the two solvers"></svg>
-        <div class="legend"><span><i style="background:var(--s1)"></i>EPA 5.2.4 DYNWAVE</span><span><i style="background:var(--s2)"></i>RASPIPE</span></div>
+        <svg class="chart" id="chart" viewBox="0 0 800 340" role="img" aria-label="Hydrograph comparing the solvers"></svg>
+        <div class="legend" id="runLeg"></div>
       </div>
       <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Largest differences in peak link flow</h3><button class="ghost" id="peakCsv">Export this table</button></div><div class="tw"><table id="diffT"></table></div><p class="status" id="diffN"></p></div>
     </div>
@@ -243,7 +256,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
     </div>
     <div class="ctl"><label for="pTime">Time <output id="pTimeO"></output></label><input type="range" id="pTime" min="0" max="1" step="1" value="0"></div>
     <svg class="chart" id="pchart" viewBox="0 0 800 380" role="img" aria-label="Longitudinal profile of the pipes between two nodes with the hydraulic grade line of each engine"></svg>
-    <div class="legend"><span><i style="background:var(--s1)"></i>EPA 5.2.4 hydraulic grade line</span><span><i style="background:var(--s2)"></i>RASPIPE hydraulic grade line</span><span><i style="background:var(--axis)"></i>Pipe and manhole</span><span><i style="background:var(--grid)"></i>Cell boundaries</span></div>
+    <div class="legend"><span id="pLeg" style="display:contents"></span><span><i style="background:var(--axis)"></i>Pipe and manhole</span><span><i style="background:var(--grid)"></i>Cell boundaries</span></div>
     <p class="status">The <code>.out</code> file holds heads at nodes, not cells, so each grade line is straight between nodes. Cell boundaries are worked out from this run's settings, and are drawn only where they are at least 3 pixels apart. The time slider starts at the busiest report period.</p>
   </div>
   <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Nodes on this path</h3><button class="ghost" id="pCsv">Export this profile</button></div><div class="tw"><table id="pT"></table></div></div>
@@ -279,9 +292,25 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 
 <!-- VERIFY -->
 <section class="pane" id="p-verify" role="tabpanel" aria-labelledby="t-verify" hidden>
-  <div class="box panel intro" data-intro><span><b>Verify.</b> Every number here came from a run of this engine on a native build, with the scripts and decks in the engine zip. Each test says what kind of evidence it is, because a closed-form answer, a second solver and a start-up check do not prove the same thing.</span><button>Hide</button></div>
+  <div class="box panel intro" data-intro><span><b>Verify.</b> Every number here came from a run of this engine on a native build, with the scripts and decks in the engine zip. The first card compares it with HEC-RAS 7.0.2 itself. Each test says what kind of evidence it is, because a closed-form answer, a second solver and a start-up check do not prove the same thing.</span><button>Hide</button></div>
   <div class="box ok" id="vHead"></div>
   <div class="tiles four" id="mT"></div>
+  <div class="card" id="rasCard"><h3>Checked against HEC-RAS 7.0.2</h3>
+    <p class="status">HEC's own EXTRAN example projects, run in HEC-RAS 7.0.2 on Bob's Windows machine, read from RAS's HDF5 results, and compared with engine 1.3 here. RAS is the reference, not the truth: where the two differ, this says which one moved, not which one is right.</p>
+    <h4>Does RAS reproduce itself?</h4><p id="rasRerun" style="margin:0"></p>
+    <h4>EXTRAN 1, every node and pipe at every minute</h4><div class="tw"><table id="rasT"></table></div>
+    <h4>Head at 82309, where the three upper pipes meet</h4>
+    <svg class="chart" id="raschart" viewBox="0 0 800 320" role="img" aria-label="Head at node 82309 against time for HEC-RAS 7.0.2, RASPIPE with and without full-pipe storage, and EPA 5.2.4"></svg>
+    <div class="legend"><span><i style="background:var(--s4);height:3px"></i>HEC-RAS 7.0.2, stored result</span><span><i style="background:var(--s2)"></i>RASPIPE, no full-pipe storage</span><span><i style="background:var(--s3)"></i>RASPIPE, 12.566 ft² per full cell</span><span><i style="background:var(--s1)"></i>EPA 5.2.4 DYNWAVE</span></div>
+    <div class="row" style="margin-top:6px"><button class="ghost" id="rasZoom">Show the whole run</button><button class="ghost" id="rasCsv">Export these series</button></div>
+    <h4>When the upper nodes fill and drain</h4><div class="tw"><table id="rasTm"></table></div>
+    <h4>Water RAS keeps above the crown of a full pipe</h4>
+    <svg class="chart" id="rasvchart" viewBox="0 0 800 280" role="img" aria-label="Volume in pipes 8040, 8060 and 1602 beyond what RAS's own cell tables hold, against 12.566 times the summed head above the crowns"></svg>
+    <div class="legend"><span><i style="background:var(--s4)"></i>Inflow minus outflow, less the volume RAS's tables hold</span><span><i style="background:var(--s2)"></i>12.566 ft² &times; summed head above the crown of each full cell</span></div>
+    <p class="status" id="rasVN"></p>
+    <h4>The other plans, run without retuning, rim matched</h4><div class="tw"><table id="rasH"></table></div>
+    <h4>Read these before quoting the tables</h4><ul id="rasN" style="margin:0;padding-left:18px;line-height:1.6"></ul>
+  </div>
   <div class="card"><h3>Three benchmarks set from outside this project</h3>
     <p class="status">The first two have answers on paper that no one here wrote. The third is scored against a solver from the same AI session, and it is labeled that way.</p>
     <h4>Stoker's dam break: 10 ft of water behind a gate, 2 ft in front</h4>
@@ -297,6 +326,17 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
     <div class="legend" id="wleg"></div>
     <div class="tw" style="margin-top:8px"><table id="wT"></table></div>
     <p class="status" id="wNote"></p>
+  </div>
+  <div class="card"><h3>SWMM5, SWMM6 and RASPIPE on the same decks</h3>
+    <p class="status">Eight plain .inp files, every engine reading the same thing. SWMM6 modified DW is DYNWAVE with DYNAMIC_SLOT, SEMI_IMPLICIT and ANDERSON_ACCEL. RASPIPE at 100 ft cells, theta 0.6 for the full equations, and 25 ft on the dam break.</p>
+    <div class="tw"><table id="sxT"></table></div>
+    <h4>The dam break as a plain deck, 200 conduits of 20 ft</h4>
+    <svg class="chart" id="sxchart" viewBox="0 0 800 300" role="img" aria-label="Depth along the pipe at 60 seconds for each engine against the exact solution"></svg>
+    <div class="legend"><span><i style="background:var(--s4)"></i>Exact</span><span><i style="background:var(--s1)"></i>EPA 5.2.4 EXTRAN</span><span><i style="background:var(--s5)"></i>SWMM6 modified DW</span><span><i style="background:var(--s3)"></i>SWMM6 FV</span><span><i style="background:var(--s2)"></i>RASPIPE full equations</span></div>
+    <h4>Read these before quoting the table</h4><ul id="sxN" style="margin:0;padding-left:18px;line-height:1.6"></ul>
+    <h4>A random sample of the corpus</h4><div class="tw"><table id="sxC"></table></div><p class="status" id="sxCN"></p>
+    <h4>SWMM6 options one at a time</h4><div class="tw"><table id="sxO"></table></div><p class="status" id="sxON"></p>
+    <h4>The short wide box at a 30 s step</h4><div class="tw"><table id="sxB"></table></div><p class="status" id="sxBN"></p>
   </div>
   <div class="card"><h3>How RASPIPE compares with the HEC method</h3><div class="tw"><table id="mtT"></table></div></div>
   <div class="card"><h3>Every test, and what kind of evidence it is</h3><div class="tw"><table id="vT"></table></div></div>
@@ -320,6 +360,13 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
   <div class="grid">
     <div class="stack">
       <div class="card"><h3>What this is</h3><p>A fork of EPA SWMM 5.2.4 with one new source file, <code>raspipe.c</code>, about 2,500 lines. It replaces the explicit link and node update of dynamic wave routing with a semi-implicit finite volume solve over a mesh of pipe cells. Hydrology, controls, statistics and the <code>.out</code> format are EPA's. Quality routing is EPA's with one change: it is told the flow at each end of a conduit.</p></div>
+      <div class="card"><h3>SWMM6 on this page</h3><p class="status">Version 1.3 adds SWMM6 modified DW and SWMM6 FV as their own lines on the Run and Profile tabs, and a shared table on Verify. The engine is OpenSWMM 6.0.0-alpha.4 from swmm6_rel at 3c30f1e, October 17, 2026, the same build as the Seven SWMM Engines app. OpenSWMM Engine, Copyright 2026 HydroCouple Developers, Apache License 2.0, with public domain EPA SWMM material. The USEPA does not endorse this product.</p></div>
+      <div class="card"><h3>What changed in 1.4</h3><ul style="margin:0;padding-left:18px;line-height:1.6">
+        <li>Checked against HEC-RAS 7.0.2 on four of HEC's own EXTRAN example plans. The Verify tab opens with the results, and the EXTRAN 1 sample draws RAS's stored result beside the engines.</li>
+        <li>Engine 1.3 adds <code>RASPIPE_PRESSURE_AREA</code>: storage above the crown of a full pipe cell, which HEC-RAS turned out to keep. Off by default, and with it off the engine's <code>.out</code> is the same as 1.2's, byte for byte.</li>
+        <li>A Storage in a full pipe cell control on the Run tab, three cases that reproduce the HEC-RAS figures, and three new entries in the defect register.</li>
+        <li>The Doc now opens with what is unique about the app, the essay in three sizes and four questions, and closes with a measured complexity box. A technical summary in Markdown ships beside the page.</li>
+      </ul></div>
       <div class="card"><h3>What changed in 1.2</h3><ul style="margin:0;padding-left:18px;line-height:1.6">
         <li>The full equations now use HEC's Eulerian-Lagrangian advection, and momentum crosses a junction of two conduits. Diffusion wave is unchanged, byte for byte.</li>
         <li>Three outside benchmarks: Stoker's dam break, a U-tube, and the wave scored one cause at a time.</li>
@@ -327,7 +374,8 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
         <li>The report and the app give the mesh achieved, the pipe steps, the largest Courant number and the build.</li>
         <li>A Profile tab, cases that reproduce the published numbers, and a label on every test saying what kind of evidence it is.</li>
       </ul></div>
-      <div class="box hi"><b>Not HEC-RAS.</b> This is an independent implementation written from HEC's public manuals and the journal papers they cite. It contains no HEC-RAS code, and it has not been compared with a run of HEC-RAS. The Hydrologic Engineering Center and the U.S. Army Corps of Engineers did not make, review or endorse it.</div>
+      <div class="box hi"><b>Not HEC-RAS.</b> This is an independent implementation written from HEC's public manuals and the journal papers they cite. It contains no HEC-RAS code. Its results have been compared with HEC-RAS 7.0.2 runs of HEC's EXTRAN examples, and they differ: see Verify. The Hydrologic Engineering Center and the U.S. Army Corps of Engineers did not make, review or endorse it.</div>
+      <div class="card"><h3>Technical summary</h3><p class="status" style="margin:0">A Markdown file for engineers and AI tools: the method, the options, every check with its numbers, the limits and the AI use. <a href="SWMM5-RASPIPE.md" id="mdLink">SWMM5-RASPIPE.md</a> sits beside this page; if it is not there, <button class="ghost" id="mdBtn" style="padding:2px 8px">save the copy inside this page</button>.</p></div>
       <div class="card"><h3>Sources</h3><ul id="srcs" style="margin:0;padding-left:18px;font-size:13px;line-height:1.6"></ul></div>
     </div>
     <div class="stack">
@@ -341,6 +389,7 @@ RASPIPE_THETA         1.0     ; 0.5 to 1.0
 RASPIPE_COURANT       0.9     ; 0 = off
 RASPIPE_INITIAL_STAGE YES
 RASPIPE_WARMUP        0       ; steps, 30 or more
+RASPIPE_PRESSURE_AREA 0       ; ft2 per full cell, 1.3
 RASPIPE_NESTED_ONLY   NO      ; for testing</pre>
         <div class="tw"><table id="optT"></table></div>
       </div>
@@ -363,24 +412,27 @@ RASPIPE_NESTED_ONLY   NO      ; for testing</pre>
   <h2 id="helpT">How to use SWMM5 RASPIPE</h2>
   <ol>
     <li><b>Run a model.</b> A sample has already run. Pick another in the Model list or load your own <code>.inp</code>.</li>
-    <li><b>Change the mesh.</b> Move Cell length and press Run. Long pipes show the biggest change. Target Courant, Warm up and Project stage are the HEC-RAS time step and start-up options.</li>
-    <li><b>Read the two lines.</b> Amber is EPA 5.2.4, blue is RASPIPE. Choose any conduit or node above the chart, or open Profile to see both grade lines between any two nodes at any moment.</li>
+    <li><b>Change the mesh.</b> Move Cell length and press Run. Long pipes show the biggest change. Target Courant, Warm up and Project stage are the HEC-RAS time step and start-up options. Storage in a full pipe cell sets how much water a pressurized pipe can hold above its crown.</li>
+    <li><b>Read the lines.</b> Amber is EPA 5.2.4, blue is RASPIPE, violet is SWMM6 modified DW and green is SWMM6 FV. Choose any conduit or node above the chart, or open Profile to see both grade lines between any two nodes at any moment.</li>
     <li><b>Look inside a cell.</b> That tab shows how a pipe pressurizes without a slot.</li>
-    <li><b>Check the claims.</b> Verify lists each test, the kind of evidence it is, what was expected and what came out. Reproduce a published case sets every control for you.</li>
+    <li><b>Check the claims.</b> Verify opens with HEC-RAS 7.0.2 on HEC's own EXTRAN examples, then lists each test, the kind of evidence it is, what was expected and what came out. Reproduce a published case sets every control for you; the three HEC-RAS cases draw RAS's own result on the chart.</li>
     <li><b>Take it with you.</b> Export CSV and Save the .inp of this run both come from the run shown, whatever the controls say now.</li>
     <li><b>Come back here</b> with the <b>?</b> button in the header.</li>
   </ol>
   <button class="primary" id="helpClose">Start</button>
 </div></div>
 
+<!--@@S6@@-->
+<!--@@MD@@-->
 <script>
 'use strict';
-const VERSION='1.2';
+const VERSION='1.4';
 const DATA=/*@@DATA@@*/null;
 const SAMPLES=/*@@SAMPLES@@*/[];
 const WASM_B64='/*@@WASM@@*/';
 const DOCX_B64='/*@@DOCX@@*/';
 const SHIM_SRC=/*@@SHIM@@*/'';
+const S6_BUILD='OpenSWMM 6.0.0-alpha.4, swmm6_rel 3c30f1e, Oct 17, 2026';
 const $=id=>document.getElementById(id);
 const fmt=(x,n=3)=>{if(x==null||!isFinite(x))return '–';const a=Math.abs(x);if(a>0&&a<Math.pow(10,-n)/2)return n>=3?Number(x).toExponential(1):'0';return Number(x).toLocaleString('en-US',{maximumFractionDigits:n,minimumFractionDigits:0});};
 
@@ -435,17 +487,33 @@ let mod=null;
 self.onmessage=async e=>{const {wasm,inp,id}=e.data;
   try{if(!mod)mod=await WebAssembly.compile(wasm);const r=await runWasm(mod,inp,wasiShim);r.id=id;self.postMessage(r,r.out?[r.out]:[]);}
   catch(x){self.postMessage({id,rc:-2,err:String(x&&x.message||x)});}};`;
+async function runS6(factory,inp){const log=[];const t0=performance.now();const m=await factory({print:x=>log.push(x),printErr:x=>log.push(x),noInitialRun:true});
+  m.FS.writeFile('/model.inp',inp);let err=0,msg='',steps=0,el=0;const h=m._swmm_engine_create();const lastErr=()=>{try{const p=m._swmm_get_last_error_msg(h);return p?m.UTF8ToString(p):'';}catch(e){return '';}};
+  err=m.ccall('swmm_engine_open','number',['number','string','string','string','number'],[h,'/model.inp','/run.rpt','/run.out',0]);if(!err)err=m._swmm_engine_initialize(h);if(!err)err=m._swmm_engine_start(h,1);
+  const p=m._malloc(8);if(!err){do{err=m._swmm_engine_step(h,p);el=m.getValue(p,'double');steps++;}while(!err&&el>0&&steps<5e7);}m._free(p);if(err)msg=lastErr();
+  const e2=m._swmm_engine_end(h);if(!err&&e2){err=e2;msg=lastErr();}const e3=m._swmm_engine_report(h);if(!err&&e3){err=e3;msg=lastErr();}m._swmm_engine_close(h);m._swmm_engine_destroy(h);
+  const rd=q=>{try{return m.FS.readFile(q);}catch(e){return null;}};const r=rd('/run.rpt'),o=rd('/run.out');
+  return {rc:err,err:msg||(err?'SWMM6 error '+err:null),ms:performance.now()-t0,rpt:r?new TextDecoder('latin1').decode(r):'',out:o?o.slice().buffer:null};}
+const s6glue=()=>$('d-s6').textContent;
+const WORKER6_SRC=()=>s6glue()+';'+runS6.toString()+`;
+self.onmessage=async e=>{const {inp,id}=e.data;try{const r=await runS6(createSwmm6,inp);r.id=id;self.postMessage(r,r.out?[r.out]:[]);}catch(x){self.postMessage({id,rc:-2,err:String(x&&x.message||x)});}};`;
+let worker6=null,mainS6=null;
+async function runMain6(inp){if(!mainS6)mainS6=(new Function(s6glue()+';return createSwmm6;'))();await new Promise(r=>setTimeout(r,40));return runS6(mainS6,inp);}
+function runEngine6(inp){if(noWorker)return runMain6(inp);
+  try{worker6=new Worker(URL.createObjectURL(new Blob([WORKER6_SRC()],{type:'text/javascript'})));}catch(e){noWorker=true;return runMain6(inp);}
+  const w=worker6;return new Promise((res,rej)=>{const id=++jobId;pending.set(id,{res,rej,inp,six:true});w.onmessage=e=>{const q=pending.get(e.data.id);w.terminate();if(worker6===w)worker6=null;if(q){pending.delete(e.data.id);q.res(e.data);}};
+    w.onerror=()=>{const q=pending.get(id);pending.delete(id);w.terminate();if(worker6===w)worker6=null;if(q){noWorker=true;runMain6(inp).then(res,rej);}};w.postMessage({inp,id});});}
 let worker=null,wasmBytes=null,jobId=0,noWorker=false,mainShim=null,mainMod=null;const pending=new Map();
 async function runMain(inp){if(!mainShim)mainShim=(new Function(SHIM_SRC+';return wasiShim;'))();if(!mainMod)mainMod=await WebAssembly.compile(wasmBytes);
   setStatus('This preview blocks background workers, so the engine runs on the page itself. The page will not respond until it finishes.');await new Promise(r=>setTimeout(r,40));return runWasm(mainMod,inp,mainShim);}
 function getWorker(){if(!worker){worker=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})));
     worker.onmessage=e=>{const p=pending.get(e.data.id);if(p){pending.delete(e.data.id);p.res(e.data);}};
-    worker.onerror=()=>{const l=[...pending.values()];pending.clear();worker=null;noWorker=true;l.forEach(p=>runMain(p.inp).then(p.res,p.rej));};}
+    worker.onerror=()=>{const l=[...pending.entries()].filter(e=>!e[1].six);l.forEach(e=>pending.delete(e[0]));worker=null;noWorker=true;l.forEach(e=>runMain(e[1].inp).then(e[1].res,e[1].rej));};}
   return worker;}
 function runEngine(inp){if(!wasmBytes)wasmBytes=b64bytes(WASM_B64);if(noWorker)return runMain(inp);
   let w;try{w=getWorker();}catch(e){noWorker=true;return runMain(inp);}
   return new Promise((res,rej)=>{const id=++jobId;pending.set(id,{res,rej,inp});w.postMessage({wasm:wasmBytes,inp,id});});}
-function cancelEngine(){if(worker){worker.terminate();worker=null;}const l=[...pending.values()];pending.clear();l.forEach(p=>{const e=new Error('cancelled');e.cancelled=true;p.rej(e);});}
+function cancelEngine(){if(worker){worker.terminate();worker=null;}if(worker6){worker6.terminate();worker6=null;}const l=[...pending.values()];pending.clear();l.forEach(p=>{const e=new Error('cancelled');e.cancelled=true;p.rej(e);});}
 
 /* ---------- .inp editing ---------- */
 function setOption(s,key,val){const re=new RegExp('^[ \\t]*'+key+'[ \\t]+\\S.*$','mi');
@@ -453,9 +521,13 @@ function setOption(s,key,val){const re=new RegExp('^[ \\t]*'+key+'[ \\t]+\\S.*$'
   return s.replace(/^\s*\[OPTIONS\][^\n]*\n/mi,m=>m+key+'  '+val+'\n');}
 function dropOptions(s){return s.replace(/^[ \t]*RASPIPE_[A-Z_]+[ \t].*\r?\n/gmi,'');}
 function deckStock(s){s=dropOptions(s);return setOption(s,'FLOW_ROUTING','DYNWAVE');}
-function deckRas(s,o){s=dropOptions(s);s=setOption(s,'FLOW_ROUTING','RASPIPE');
-  s=s.replace(/^\s*\[OPTIONS\][^\n]*\n/mi,m=>m+`RASPIPE_EQUATIONS  ${o.eqn}\nRASPIPE_CELL_LENGTH  ${o.cell}\nRASPIPE_MAX_CELLS  ${o.maxc}\nRASPIPE_THETA  ${o.theta}\nRASPIPE_COURANT  ${o.cour}\nRASPIPE_WARMUP  ${o.warm}\nRASPIPE_INITIAL_STAGE  ${o.stg}\n`);
+function deckRas(s,o){s=dropOptions(s);o={...o,si:flowUnits(s).l==='m'};s=setOption(s,'FLOW_ROUTING','RASPIPE');
+  s=s.replace(/^\s*\[OPTIONS\][^\n]*\n/mi,m=>m+`RASPIPE_EQUATIONS  ${o.eqn}\nRASPIPE_CELL_LENGTH  ${o.cell}\nRASPIPE_MAX_CELLS  ${o.maxc}\nRASPIPE_THETA  ${o.theta}\nRASPIPE_COURANT  ${o.cour}\nRASPIPE_WARMUP  ${o.warm}\nRASPIPE_INITIAL_STAGE  ${o.stg}\n`+(o.pa>0?`RASPIPE_PRESSURE_AREA  ${+(o.si?o.pa*0.09290304:o.pa).toFixed(4)}\n`:''));
   if(o.dt)s=setOption(s,'ROUTING_STEP',o.dt);if(o.vs!=='')s=setOption(s,'VARIABLE_STEP',o.vs);return s;}
+
+function dropSix(s){return s.replace(/^[ \t]*(SURCHARGE_METHOD|NODE_CONTINUITY|ANDERSON_ACCEL|FV_[A-Z_]+)[ \t].*\r?\n/gmi,'');}
+function deckS6dw(s,o){s=dropSix(dropOptions(s));s=setOption(s,'FLOW_ROUTING','DYNWAVE');[['SURCHARGE_METHOD','DYNAMIC_SLOT'],['NODE_CONTINUITY',o&&o.s6si===false?'EXPLICIT':'SEMI_IMPLICIT'],['ANDERSON_ACCEL','YES']].forEach(([k,v])=>{s=setOption(s,k,v);});return s;}
+function deckS6fv(s,o){s=dropSix(dropOptions(s));s=setOption(s,'FLOW_ROUTING','FV');if(o.fvm==='match'){s=setOption(s,'FV_CELL_LENGTH',o.cell);s=setOption(s,'FV_ORDER',2);}return s;}
 
 /* ---------- results readers ---------- */
 function readOut(buf){const n=buf?buf.byteLength:0;if(n<60)throw new Error('The output file is empty.');
@@ -528,21 +600,21 @@ function plot(svg,series,opt){let x0=1e300,x1=-1e300,y0=1e300,y1=-1e300;
 const CELLS=[12.5,25,50,100,200,400,800],MAXC=[2,5,10,20,50,100,200,400,800];
 let current={name:'',inp:''},last=null,view={rows:[]},runSeq=0,running=false;
 const seg=id=>$(id).querySelector('.on').dataset.v;
-function opts(){return{eqn:seg('eqn'),cell:CELLS[+$('cell').value],maxc:MAXC[+$('maxc').value],theta:+$('theta').value,dt:$('dt').value,vs:$('vs').value,cour:+$('cour').value,warm:+$('warm').value,stg:seg('stg')};}
+function opts(){return{s6dw:$('s6dw').checked,s6si:$('s6si').checked,s6fv:$('s6fv').checked,fvm:$('fvm').value,eqn:seg('eqn'),cell:CELLS[+$('cell').value],maxc:MAXC[+$('maxc').value],theta:+$('theta').value,dt:$('dt').value,vs:$('vs').value,cour:+$('cour').value,warm:+$('warm').value,stg:seg('stg'),pa:+$('pa').value};}
 function setSeg(id,v){$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));}
-function setOpts(o){setSeg('eqn',o.eqn);$('cell').value=CELLS.indexOf(o.cell);$('maxc').value=MAXC.indexOf(o.maxc);$('theta').value=o.theta;$('dt').value=o.dt;$('vs').value=o.vs;$('cour').value=o.cour;$('warm').value=o.warm;setSeg('stg',o.stg);refreshLabels();}
-const DEFAULTS={eqn:'DW',cell:100,maxc:20,theta:1,dt:'',vs:'',cour:.9,warm:0,stg:'YES'};
+function setOpts(o){$('s6dw').checked=o.s6dw;$('s6si').checked=o.s6si!==false;$('s6fv').checked=o.s6fv;$('fvm').value=o.fvm;setSeg('eqn',o.eqn);$('cell').value=CELLS.indexOf(o.cell);$('maxc').value=MAXC.indexOf(o.maxc);$('theta').value=o.theta;$('dt').value=o.dt;$('vs').value=o.vs;$('cour').value=o.cour;$('warm').value=o.warm;setSeg('stg',o.stg);$('pa').value=String(o.pa||0);refreshLabels();}
+const DEFAULTS={s6dw:true,s6si:true,s6fv:true,fvm:'match',eqn:'DW',cell:100,maxc:20,theta:1,dt:'',vs:'',cour:.9,warm:0,stg:'YES',pa:0};
 function refreshLabels(){$('cellO').textContent=fmt(CELLS[+$('cell').value],1);$('maxcO').textContent=MAXC[+$('maxc').value];$('thetaO').textContent=(+$('theta').value).toFixed(2);$('courO').textContent=+$('cour').value===0?'off':(+$('cour').value).toFixed(1);$('warmO').textContent=+$('warm').value===0?'none':$('warm').value;staleCheck();}
 function staleCheck(){if(running)return;const s=!!(last&&(last.inp!==current.inp||JSON.stringify(last.o)!==JSON.stringify(opts())));$('stale').hidden=!s;if(s)$('stale').textContent='Settings changed. Rerun to update results. Everything below, and both exports, still belong to the run described above.';}
-['cell','maxc','theta','cour','warm'].forEach(i=>$(i).addEventListener('input',refreshLabels));['dt','vs'].forEach(i=>$(i).addEventListener('change',staleCheck));
+['cell','maxc','theta','cour','warm'].forEach(i=>$(i).addEventListener('input',refreshLabels));['dt','vs','s6dw','s6si','s6fv','fvm','pa'].forEach(i=>$(i).addEventListener('change',staleCheck));
 ['eqn','stg'].forEach(g=>$(g).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$(g).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));staleCheck();})));
 SAMPLES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.name;$('model').appendChild(o);});
 (DATA.presets||[]).forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.label;$('preset').appendChild(o);});
-function pick(i){const s=SAMPLES[i];current={name:s.file,inp:s.inp,pick:s.pick};$('modelNote').textContent=s.note;run();}
+function pick(i){const s=SAMPLES[i];current={name:s.file,inp:s.inp,pick:s.pick,pickN:s.pickN,ref:s.ref};$('modelNote').textContent=s.note;run();}
 const PN='Sets the model and every control below, then runs.';
 $('model').addEventListener('change',e=>{$('preset').value='';$('presetNote').textContent=PN;pick(+e.target.value);});
 $('preset').addEventListener('change',e=>{const p=DATA.presets[+e.target.value];if(!p){$('presetNote').textContent=PN;return;}
-  setOpts({...DEFAULTS,...p.o});const i=SAMPLES.findIndex(s=>s.file===p.file);$('model').value=i;current={name:SAMPLES[i].file,inp:SAMPLES[i].inp,pick:p.elem||SAMPLES[i].pick};$('modelNote').textContent=SAMPLES[i].note;$('presetNote').textContent=p.note;$('vari').value=p.vari||'flow';run();});
+  setOpts({...DEFAULTS,...p.o});const i=SAMPLES.findIndex(s=>s.file===p.file);$('model').value=i;current={name:SAMPLES[i].file,inp:SAMPLES[i].inp,pick:p.elem||SAMPLES[i].pick,pickN:p.elem||SAMPLES[i].pickN,ref:SAMPLES[i].ref};$('modelNote').textContent=SAMPLES[i].note;$('presetNote').textContent=p.note;$('vari').value=p.vari||'flow';run();});
 async function loadFile(f){if(!f)return;const t=await f.text();$('preset').value='';$('presetNote').textContent=PN;current={name:f.name,inp:t};$('modelNote').textContent=f.name+', '+fmt(t.length/1024,0)+' KB. Your own model, not a sample.';run();}
 $('file').addEventListener('change',e=>loadFile(e.target.files[0]));
 const dz=$('drop');['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
@@ -551,7 +623,7 @@ dz.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
 $('runBtn').addEventListener('click',run);
 function setRunning(on,msg){running=on;$('runBtn').disabled=on;$('stopBtn').hidden=!on;if(on&&last){$('stale').hidden=false;$('stale').textContent='Running. The results below are from the previous run until this one finishes.';}if(!on)staleCheck();}
 $('stopBtn').addEventListener('click',()=>{runSeq++;cancelEngine();setRunning(false);setBadge('cancelled');setStatus(last?'Cancelled. The results below are from the earlier run named above them.':'Cancelled. There are no results to show.');});
-function setBadge(s){const m={completed:['ok','Completed'],warnings:['warn','Completed with convergence warnings'],failed:['warn','Failed'],cancelled:['hi','Cancelled'],running:['hi','Running']}[s];$('badge').className='chip '+m[0];$('badge').textContent=m[1];$('badge').hidden=false;}
+function setBadge(s){const m={completed:['ok','Completed'],warnings:['warn','Completed with warnings'],failed:['warn','Failed'],cancelled:['hi','Cancelled'],running:['hi','Running']}[s];$('badge').className='chip '+m[0];$('badge').textContent=m[1];$('badge').hidden=false;}
 async function sha(s){try{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(d)).slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');}
   catch(e){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return 'fnv'+(h>>>0).toString(16);}}
 function check(r,who){const fail=m=>{throw new Error(who+': '+m);};const rp=readRpt(r.rpt||'');if(r.err&&r.rc)fail(r.err);if(rp.errs.length)fail(rp.errs[0]);if(r.rc)fail('the engine stopped with exit code '+r.rc+'.');if(!r.out)fail('the engine wrote no results.');
@@ -560,57 +632,66 @@ async function run(){if(!current.inp)return;cancelEngine();const token=++runSeq,
   try{const deckA=deckStock(src.inp),deckB=deckRas(src.inp,o);setStatus('Running EPA 5.2.4 DYNWAVE…');const a=await runEngine(deckA);if(token!==runSeq)return;
     setStatus('Running RASPIPE…');const b=await runEngine(deckB);if(token!==runSeq)return;
     const ca=check(a,'EPA 5.2.4'),cb=check(b,'RASPIPE');const warn=[];if(cb.rp.unsolved>0)warn.push(`RASPIPE left ${cb.rp.unsolved} step(s) unsolved, largest volume residual ${fmt(cb.rp.res,4)} ft³`);if(cb.rp.unconv>0)warn.push(`${fmt(cb.rp.unconv,0)} nested solve(s) stopped at their limit`);if(ca.rp.nonconv>0)warn.push(`EPA reports ${fmt(ca.rp.nonconv,2)}% of steps not converging`);
+    const extra=[];for(const [on,key,label,c,deck] of [[o.s6dw,'s6dw',o.s6si===false?'SWMM6 modified DW, no SEMI_IMPLICIT':'SWMM6 modified DW','s5',deckS6dw(src.inp,o)],[o.s6fv,'s6fv','SWMM6 FV','s3',deckS6fv(src.inp,o)]]){if(!on)continue;setStatus('Running '+label+'…');
+      try{const r=await runEngine6(deck);if(token!==runSeq)return;const q=check(r,label);if(!(q.o.L.length||q.o.N.length))throw new Error(label+': no results.');extra.push({key,label,c,R:q.o,rp:q.rp,ms:r.ms,deck});}
+      catch(e){if(e.cancelled)throw e;if(token!==runSeq)return;warn.push(e.message.replace(/^(SWMM6 \w+( \w+)?): /,'$1 failed: '));}}
     const status=warn.length?'warnings':'completed',hash=await sha(src.inp);if(token!==runSeq)return;
-    last=Object.freeze({id:token,name:src.name,inp:src.inp,hash,units:flowUnits(src.inp),o:Object.freeze({...o}),deckA,deckB,A:ca.o,B:cb.o,ra:ca.rp,rb:cb.rp,ms:[a.ms,b.ms],when:new Date().toISOString(),status,warn,pick:src.pick});
-    view={rows:[]};fillElems(true);render();setBadge(status);setStatus((status==='completed'?'Completed. ':'Completed with convergence warnings. ')+fmt(a.ms+b.ms,0)+' ms in your browser.');profInit();
+    last=Object.freeze({id:token,name:src.name,inp:src.inp,hash,units:flowUnits(src.inp),o:Object.freeze({...o}),deckA,deckB,A:ca.o,B:cb.o,ra:ca.rp,rb:cb.rp,ms:[a.ms,b.ms],extra:Object.freeze(extra),when:new Date().toISOString(),status,warn,pick:src.pick,pickN:src.pickN,ref:src.ref||null});
+    view={rows:[]};fillElems(true);render();setBadge(status);setStatus((status==='completed'?'Completed. ':'Completed with warnings. ')+fmt(a.ms+b.ms+extra.reduce((t,e)=>t+e.ms,0),0)+' ms in your browser.');profInit();
   }catch(e){if(token!==runSeq)return;if(e.cancelled){setBadge('cancelled');return;}last=null;renderEmpty(e.message);setBadge('failed');setStatus('Failed. '+e.message);}
   finally{if(token===runSeq)setRunning(false);}}
 function renderEmpty(msg){$('tiles').innerHTML='';$('chart').innerHTML='';$('diffT').innerHTML='';$('rec').hidden=false;$('rec').innerHTML='<b>No results.</b> '+esc(msg||'')+' Nothing from the earlier run is shown.';$('meshWarn').hidden=true;$('stale').hidden=true;$('elem').innerHTML='';profClear();}
 function fillElems(fresh){const v=$('vari').value,l=(v==='flow'||v==='vol')?last.A.L:last.A.N,prev=$('elem').value,e=$('elem');const prevName=e.selectedOptions[0]?e.selectedOptions[0].textContent:null;e.innerHTML='';
   l.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;e.appendChild(o);});
-  let idx=l.indexOf(prevName);const pref=last.pick;if((fresh||idx<0)&&pref&&l.indexOf(pref)>=0)idx=l.indexOf(pref);if(idx<0)idx=peakIndex(v);e.value=String(idx);}
+  let idx=l.indexOf(prevName);const pref=(v==='flow'||v==='vol')?last.pick:(last.pickN||last.pick);if((fresh||idx<0)&&pref&&l.indexOf(pref)>=0)idx=l.indexOf(pref);if(idx<0)idx=peakIndex(v);e.value=String(idx);}
 function peakIndex(v){if(!last)return 0;if(v==='flow'||v==='vol'){let b=0,bv=-1;last.A.L.forEach((n,j)=>{const a=last.A.link(j,0).reduce((m,x)=>Math.max(m,Math.abs(x)),0);if(a>bv){bv=a;b=j;}});return b;}return 0;}
 $('vari').addEventListener('change',()=>{if(last){fillElems();render();}});$('elem').addEventListener('change',()=>{if(last)render();});
 const LABEL={flow:'Flow',vol:'Volume',depth:'Depth',head:'Head'};
 const unitOf=(v,U)=>({flow:U.q,vol:U.v,depth:U.l,head:U.l}[v]);
 function series(){const v=$('vari').value,j=+$('elem').value,{A,B}=last;
   const get=(R)=>v==='flow'?R.link(j,0):v==='vol'?R.link(j,3):v==='depth'?R.node(j,0):R.node(j,1);
-  return [{x:Array.from(A.hours),y:get(A),c:'s1',d:A.days},{x:Array.from(B.hours),y:get(B),c:'s2',d:B.days}];}
+  const name=$('elem').selectedOptions[0]?$('elem').selectedOptions[0].textContent:'',isL=v==='flow'||v==='vol',out=[{x:Array.from(A.hours),y:get(A),c:'s1',d:A.days,label:'EPA 5.2.4 DYNWAVE',col:'EPA_DYNWAVE'},{x:Array.from(B.hours),y:get(B),c:'s2',d:B.days,label:'RASPIPE',col:'RASPIPE'}];
+  last.extra.forEach(e=>{const i=(isL?e.R.L:e.R.N).indexOf(name);if(i<0)return;const y=v==='flow'?e.R.link(i,0):v==='vol'?e.R.link(i,3):v==='depth'?e.R.node(i,0):e.R.node(i,1);out.push({x:Array.from(e.R.hours),y,c:e.c,d:e.R.days,label:e.label,col:e.key==='s6dw'?'SWMM6_MODIFIED_DW':'SWMM6_FV'});});
+  const rf=last.ref;if(rf&&v!=='vol'){const y=v==='flow'?rf.flow[name]:rf.head[name];if(y){const d0=A.days[0]-A.hours[0]/24,ys=v==='depth'?y.map(h=>h-rf.inv[name]):y;out.push({x:rf.t.slice(),y:Float64Array.from(ys),c:'s4',dash:'7 4',w:2.5,d:Float64Array.from(rf.t,t=>d0+t/24),label:'HEC-RAS 7.0.2, stored result'+(v==='flow'?' (mid-pipe face)':''),col:'HEC_RAS_7_0_2'});}}
+  return out;}
 function recordHTML(){const r=last,o=r.o,b=r.rb,U=r.units;
   const ach=b.len?`${b.cells||''} cells / faces, cell length ${fmt(b.len[0],2)} / ${fmt(b.len[1],2)} / ${fmt(b.len[2],2)} ${U.l} (min / median / max), ${b.cap?b.cap[0]+' of '+b.cap[1]+' conduits at the limit of '+b.cap[2]:''}`:'';
-  return `<b>Run ${r.id}.</b> ${esc(r.name)}, ${U.q}, input ${r.hash}, finished ${r.when.replace('T',' ').slice(0,19)} UTC.<br><b>Asked for:</b> ${o.eqn==='SWE'?'full shallow water':'diffusion wave'}, cell ${fmt(o.cell,1)} ${U.l}, limit ${o.maxc}, &theta; ${o.theta.toFixed(2)}, Courant ${o.cour?o.cour:'off'}, warm up ${o.warm}, stage projection ${o.stg}, routing step ${o.dt?o.dt+' s':'as in the model'}, variable step ${o.vs===''?'as in the model':o.vs}.<br><b>Got:</b> ${ach}.<br><b>Engines:</b> RASPIPE ${esc(b.build||'')}, EPA ${esc(r.ra.engine||'5.2.4')}.${r.warn.length?'<br><b>Warnings:</b> '+esc(r.warn.join('; '))+'.':''}`;}
-function render(){if(!last)return;const {ra,rb,ms}=last,u=ra.units;
-  const pair=(a,b,d=3)=>`<div class="pair"><span class="v1">${fmt(a,d)}</span><span class="v2">${fmt(b,d)}</span></div>`;
+  return `<b>Run ${r.id}.</b> ${esc(r.name)}, ${U.q}, input ${r.hash}, finished ${r.when.replace('T',' ').slice(0,19)} UTC.<br><b>Asked for:</b> ${o.eqn==='SWE'?'full shallow water':'diffusion wave'}, cell ${fmt(o.cell,1)} ${U.l}, limit ${o.maxc}, &theta; ${o.theta.toFixed(2)}, Courant ${o.cour?o.cour:'off'}, warm up ${o.warm}, stage projection ${o.stg}, full-pipe storage ${o.pa?fmt(o.pa,3)+' ft² per cell':'none'}, routing step ${o.dt?o.dt+' s':'as in the model'}, variable step ${o.vs===''?'as in the model':o.vs}.<br><b>Got:</b> ${ach}.<br><b>Engines:</b> RASPIPE ${esc(b.build||'')}, EPA ${esc(r.ra.engine||'5.2.4')}${r.extra.length?', '+S6_BUILD+' ('+r.extra.map(e=>e.key==='s6dw'?'modified DW':'FV, '+(o.fvm==='match'?'cell '+fmt(o.cell,1)+' '+U.l+', order 2':'SWMM6 defaults')).join(' and ')+')':''}.${r.warn.length?'<br><b>Warnings:</b> '+esc(r.warn.join('; '))+'.':''}`;}
+function render(){if(!last)return;const {ra,rb,ms,extra}=last,u=ra.units;
+  const pair=(a,b,d=3,f)=>`<div class="pair"><span class="v1">${fmt(a,d)}</span><span class="v2">${fmt(b,d)}</span>${extra.map(e=>`<span class="v${e.c.slice(1)}">${fmt(f(e),d)}</span>`).join('')}</div>`;
+  const order='EPA, RASPIPE'+extra.map(e=>e.key==='s6dw'?', SWMM6 DW':', SWMM6 FV').join('');
+  
   $('rec').hidden=false;$('rec').innerHTML=recordHTML();$('meshWarn').hidden=!(rb.cap&&rb.cap[0]>0);
-  $('tiles').innerHTML=`<div class="tile"><b>Routing continuity</b>${pair(ra.cont,rb.cont)}<i>percent, EPA then RASPIPE</i></div>
-  <div class="tile"><b>Flooding</b>${pair(ra.flood,rb.flood)}<i>${u}</i></div><div class="tile"><b>Outflow</b>${pair(ra.out,rb.out)}<i>${u}</i></div>
+  $('tiles').innerHTML=`<div class="tile"><b>Routing continuity</b>${pair(ra.cont,rb.cont,3,e=>e.rp.cont)}<i>percent: ${order}</i></div>
+  <div class="tile"><b>Flooding</b>${pair(ra.flood,rb.flood,3,e=>e.rp.flood)}<i>${u}</i></div><div class="tile"><b>Outflow</b>${pair(ra.out,rb.out,3,e=>e.rp.out)}<i>${u}</i></div>
   <div class="tile"><b>Mesh achieved</b><div class="pair"><span class="v0">${rb.cells||'–'}</span></div><i>cells / faces, median ${rb.len?fmt(rb.len[1],1):'–'} ${last.units.l}</i></div>
   <div class="tile"><b>Pipe steps per routing step</b><div class="pair"><span class="v0">${fmt(rb.sub,2)}</span></div><i>${rb.dts?`step ${fmt(rb.dts[0],2)} to ${fmt(rb.dts[2],2)} s, mean ${fmt(rb.dts[1],2)}; Courant reached ${fmt(rb.cr,2)}`:''}</i></div>
-  <div class="tile"><b>Run time</b>${pair(ms[0],ms[1],0)}<i>ms in this browser</i></div>`;
+  <div class="tile"><b>Run time</b>${pair(ms[0],ms[1],0,e=>e.ms)}<i>ms in this browser. SWMM6 includes loading its engine</i></div>`;
   const s=series(),v=$('vari').value,U=last.units,name=LABEL[v]+' ('+unitOf(v,U)+')';
+  $('runLeg').innerHTML=s.map(q=>`<span><i style="background:var(--${q.c})${q.dash?';height:3px':''}"></i>${esc(q.label)}</span>`).join('');
   $('chartT').textContent=LABEL[v]+' at '+$('elem').selectedOptions[0].textContent;
   plot($('chart'),s,{xl:'Hours from the start of the run',yl:name});
-  const T=last.topo||(view.topo=view.topo||topology(last.inp)),peak=R=>j=>{const a=R.link(j,0);let m=0;for(let k=0;k<a.length;k++)if(Math.abs(a[k])>m)m=Math.abs(a[k]);return m;},pa=peak(last.A),pb=peak(last.B);
-  const rows=last.A.L.map((n,i)=>{const a=pa(i),b=pb(i),l=T.links.get(n);return{n,kind:l?l.kind:'link',a,b,d:b-a};}),big=rows.reduce((m,r)=>Math.max(m,r.a,r.b),0),near=Math.max(1e-3,1e-6*big);
+  const T=last.topo||(view.topo=view.topo||topology(last.inp)),peak=R=>j=>{const a=R.link(j,0);let m=0;for(let k=0;k<a.length;k++)if(Math.abs(a[k])>m)m=Math.abs(a[k]);return m;},pa=peak(last.A),pb=peak(last.B),px=extra.map(e=>({e,f:peak(e.R)}));
+  const rows=last.A.L.map((n,i)=>{const a=pa(i),b=pb(i),l=T.links.get(n),ex=px.map(q=>{const j=q.e.R.L.indexOf(n);return j<0?null:q.f(j);});const all=[b,...ex].filter(v=>v!=null);const d=all.reduce((m,v)=>Math.abs(v-a)>Math.abs(m)?v-a:m,0);return{n,kind:l?l.kind:'link',a,b,ex,d,dr:b-a};}),big=rows.reduce((m,r)=>Math.max(m,r.a,r.b),0),near=Math.max(1e-3,1e-6*big);
   rows.forEach(r=>{r.rel=r.a>near?100*r.d/r.a:null;});rows.sort((p,q)=>Math.abs(q.d)-Math.abs(p.d));view.rows=rows;view.near=near;
-  $('diffT').innerHTML=`<tr><th>Link</th><th>Kind</th><th class="n">EPA peak</th><th class="n">RASPIPE peak</th><th class="n">&Delta;Q</th><th class="n">Relative</th></tr>`+rows.slice(0,10).map(r=>`<tr><td>${esc(r.n)}</td><td>${r.kind}</td><td class="n">${fmt(r.a)}</td><td class="n">${fmt(r.b)}</td><td class="n">${fmt(r.d)}</td><td class="n">${r.rel==null?'near-zero baseline':fmt(r.rel,1)+'%'}</td></tr>`).join('');
-  $('diffN').textContent=`Peak of |flow| in ${U.q}, ranked by the size of ΔQ = RASPIPE − EPA. Where EPA's peak is ${fmt(near,4)} or less a percentage means nothing, so none is shown.`;}
+  $('diffT').innerHTML=`<tr><th>Link</th><th>Kind</th><th class="n">EPA</th><th class="n">RASPIPE</th>${extra.map(e=>`<th class="n">${e.key==='s6dw'?'SWMM6 DW':'SWMM6 FV'}</th>`).join('')}<th class="n">Largest &Delta;Q</th><th class="n">Relative</th></tr>`+rows.slice(0,10).map(r=>`<tr><td>${esc(r.n)}</td><td>${r.kind}</td><td class="n">${fmt(r.a)}</td><td class="n">${fmt(r.b)}</td>${r.ex.map(v=>`<td class="n">${v==null?'–':fmt(v)}</td>`).join('')}<td class="n">${fmt(r.d)}</td><td class="n">${r.rel==null?'near-zero baseline':fmt(r.rel,1)+'%'}</td></tr>`).join('');
+  $('diffN').textContent=`Peak of |flow| in ${U.q}. Largest ΔQ is the engine furthest from EPA 5.2.4, and the table is ranked by its size. Where EPA's peak is ${fmt(near,4)} or less a percentage means nothing, so none is shown.`;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function flowUnits(inp){const m=(inp.match(/^\s*FLOW_UNITS\s+(\S+)/mi)||[])[1]||'CFS',si=/CMS|LPS|MLD/i.test(m);return{q:m.toUpperCase(),l:si?'m':'ft',v:si?'m³':'ft³'};}
 const iso=d=>new Date(Date.UTC(1899,11,30)+Math.round(d*86400)*1000).toISOString().slice(0,19);
 const stem=()=>(last.name||'model').replace(/\.inp$/i,'').replace(/[^\w.-]+/g,'_');
 function csvHead(extra){const r=last,o=r.o,b=r.rb,U=r.units;return [`# SWMM5 RASPIPE export, run ${r.id}, finished ${r.when}`,`# model: ${r.name}; input SHA-256 (first 16 hex): ${r.hash}; units: ${U.q}, ${U.l}`,...extra,
-  `# status: ${r.status==='completed'?'completed':'completed with convergence warnings: '+r.warn.join('; ')}`,
-  `# requested: equations ${o.eqn}; cell ${o.cell} ${U.l}; limit ${o.maxc}; theta ${o.theta}; Courant ${o.cour}; warm up ${o.warm}; stage projection ${o.stg}; routing step ${o.dt||'as in model'}; variable step ${o.vs===''?'as in model':o.vs}`,
+  `# status: ${r.status==='completed'?'completed':'completed with warnings: '+r.warn.join('; ')}`,
+  `# requested: equations ${o.eqn}; cell ${o.cell} ${U.l}; limit ${o.maxc}; theta ${o.theta}; Courant ${o.cour}; warm up ${o.warm}; stage projection ${o.stg}; full-pipe storage ${o.pa} ft2 per cell; routing step ${o.dt||'as in model'}; variable step ${o.vs===''?'as in model':o.vs}`,
   `# achieved: ${b.cells||''} cells / faces; cell length min ${b.len?b.len[0]:''} median ${b.len?b.len[1]:''} max ${b.len?b.len[2]:''}; conduits at limit ${b.cap?b.cap[0]+' of '+b.cap[1]:''}; pipe step min ${b.dts?b.dts[0]:''} mean ${b.dts?b.dts[1]:''} max ${b.dts?b.dts[2]:''} s; largest Courant ${b.cr}`,
-  `# engines: RASPIPE ${b.build||''}; EPA ${r.ra.engine||''}; continuity EPA ${r.ra.cont}% RASPIPE ${b.cont}%`];}
+  `# engines: RASPIPE ${b.build||''}; EPA ${r.ra.engine||''}; ${r.extra.length?S6_BUILD+' ('+r.extra.map(e=>e.label).join(', ')+'); FV mesh '+(o.fvm==='match'?'FV_CELL_LENGTH '+o.cell+', FV_ORDER 2':'SWMM6 defaults')+'; ':''}continuity EPA ${r.ra.cont}% RASPIPE ${b.cont}%${r.extra.map(e=>' '+e.label+' '+e.rp.cont+'%').join('')}`];}
 $('csvBtn').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const s=series(),v=$('vari').value,U=last.units,el=$('elem').selectedOptions[0].textContent,u=unitOf(v,U);
-  const key=new Map();const put=(q,i)=>{for(let k=0;k<q.d.length;k++){const t=Math.round(q.d[k]*86400);if(!key.has(t))key.set(t,[q.d[k],q.x[k],'','']);key.get(t)[i]=q.y[k];}};put(s[0],2);put(s[1],3);
+  const key=new Map();const put=(q,i)=>{for(let k=0;k<q.d.length;k++){const t=Math.round(q.d[k]*86400);if(!key.has(t))key.set(t,[q.d[k],q.x[k]].concat(s.map(()=>'')));key.get(t)[i]=q.y[k];}};s.forEach((q,i)=>put(q,i+2));
   const rows=[...key.keys()].sort((a,b)=>a-b).map(t=>key.get(t));
-  const c=csvHead([`# element: ${el}; variable: ${LABEL[v].toLowerCase()}; units: ${u}`]).concat([`datetime,hours_from_start,EPA_DYNWAVE_${v}_${u},RASPIPE_${v}_${u}`],rows.map(r=>`${iso(r[0])},${r[1].toFixed(6)},${r[2]},${r[3]}`)).join('\n')+'\n';
+  const c=csvHead([`# element: ${el}; variable: ${LABEL[v].toLowerCase()}; units: ${u}`]).concat(['datetime,hours_from_start,'+s.map(q=>`${q.col}_${v}_${u}`).join(',')],rows.map(r=>`${iso(r[0])},${r[1].toFixed(6)},${r.slice(2).join(',')}`)).join('\n')+'\n';
   saveFile(`${stem()}_${el.replace(/[^\w.-]+/g,'_')}_${v}_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
 $('peakCsv').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const U=last.units;
-  const c=csvHead([`# table: peak |flow| for every link, ${U.q}, ranked by |RASPIPE - EPA|; relative is empty for a near-zero EPA peak (${view.near})`]).concat(['link,kind,EPA_peak,RASPIPE_peak,delta,relative_percent'],view.rows.map(r=>`${r.n},${r.kind},${r.a},${r.b},${r.d},${r.rel==null?'':r.rel.toFixed(3)}`)).join('\n')+'\n';
+  const c=csvHead([`# table: peak |flow| for every link, ${U.q}, ranked by the largest difference from EPA; relative is empty for a near-zero EPA peak (${view.near})`]).concat(['link,kind,EPA_peak,RASPIPE_peak,'+last.extra.map(e=>e.key==='s6dw'?'SWMM6_MODIFIED_DW_peak':'SWMM6_FV_peak').concat(['largest_delta','relative_percent']).join(',')],view.rows.map(r=>`${r.n},${r.kind},${r.a},${r.b},${r.ex.map(v=>v==null?'':v).concat([r.d]).join(',')},${r.rel==null?'':r.rel.toFixed(3)}`)).join('\n')+'\n';
   saveFile(`${stem()}_peak_link_flow_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
 $('inpBtn').addEventListener('click',()=>{if(!last)return setStatus('Run a model first.');const n=`${stem()}_raspipe_run${last.id}.inp`;const inApp=window.claude&&window.claude.use;saveFile(inApp?n+'.txt':n,new Blob([last.deckB],{type:'text/plain'}));});
 
@@ -621,25 +702,25 @@ function profInit(){const T=view.topo||(view.topo=topology(last.inp));const ids=
   const d=defaultPath(T);if(d){$('pFrom').value=d.from;$('pTo').value=d.to;}else if(ids.length>1){$('pFrom').value=ids[0];$('pTo').value=ids[ids.length-1];}
   $('pTime').max=last.A.nper-1;const qs=[];for(let j=0;j<Math.min(last.B.L.length,40);j++)qs.push(last.B.link(j,0));let ip=0,bv=-1;for(let r=0;r<last.B.nper;r++){let s=0;for(const q of qs)s+=Math.abs(q[r]);if(s>bv){bv=s;ip=r;}}$('pTime').value=ip;profBuild();}
 function profBuild(){if(!last)return;const T=view.topo,p=pathBetween(T,$('pFrom').value,$('pTo').value);if(!p){prof=null;$('pchart').innerHTML='';$('pT').innerHTML='';$('pNone').hidden=false;$('pNone').textContent='These two nodes are not connected. Pick another pair.';return;}
-  $('pNone').hidden=true;const iA=n=>last.A.N.indexOf(n),nodes=[];let x=0;const add=(id,x)=>{const n=T.nodes.get(id),j=iA(id);nodes.push({id,x,n,j,hA:j>=0?last.A.node(j,1):null,hB:j>=0?last.B.node(j,1):null});};add(p[0].from,0);
+  $('pNone').hidden=true;const iA=n=>last.A.N.indexOf(n),nodes=[];let x=0;const add=(id,x)=>{const n=T.nodes.get(id),j=iA(id);nodes.push({id,x,n,j,hA:j>=0?last.A.node(j,1):null,hB:j>=0?last.B.node(j,1):null,hX:last.extra.map(e=>{const k=e.R.N.indexOf(id);return k>=0?e.R.node(k,1):null;})});};add(p[0].from,0);
   const segs=p.map(s=>{const l=s.link,L=l.kind==='conduit'?l.len:Math.max(20,0),a=x;x+=L;add(s.to,x);const up=T.nodes.get(s.sense>0?l.a:l.b),dn=T.nodes.get(s.sense>0?l.b:l.a),o1=s.sense>0?l.off1:l.off2,o2=s.sense>0?l.off2:l.off1;const j=last.A.L.indexOf(l.id);return{s,l,a,b:x,z1:up.inv+o1,z2:dn.inv+o2,h:l.h||0,qA:j>=0?last.A.link(j,0):null,qB:j>=0?last.B.link(j,0):null,cells:cellsOf(l,up,dn,o1,o2)};});
-  prof={nodes,segs};profDraw();}
+  prof={nodes,segs};$('pLeg').innerHTML=[['s1','EPA 5.2.4 grade line'],['s2','RASPIPE grade line']].concat(last.extra.map(e=>[e.c,e.label+' grade line'])).map(a=>`<span><i style="background:var(--${a[0]})"></i>${a[1]}</span>`).join('');profDraw();}
 function cellsOf(l,up,dn,o1,o2){if(l.kind!=='conduit')return 0;const a=(up.kind!=='outfall'&&Math.abs(o1)<1e-6)?.5:0,b=(dn.kind!=='outfall'&&Math.abs(o2)<1e-6)?.5:0;let m=Math.floor(l.len/last.o.cell-a-b+.5);m=Math.min(Math.max(m,1),last.o.maxc);return{m,a,b,d:l.len/(a+m+b)};}
 function profDraw(){if(!prof||!last)return;const t=+$('pTime').value,{nodes,segs}=prof,U=last.units;$('pTimeO').textContent=iso(last.A.days[t]).replace('T',' ')+', '+fmt(last.A.hours[t],3)+' h';
-  const xs=nodes[nodes.length-1].x||1;let y0=1e300,y1=-1e300;const see=v=>{if(isFinite(v)){if(v<y0)y0=v;if(v>y1)y1=v;}};segs.forEach(s=>{see(s.z1);see(s.z2);see(s.z1+s.h);see(s.z2+s.h);});nodes.forEach(n=>{see(n.n.inv);see(n.n.inv+n.n.max);if(n.hA){see(n.hA[t]);see(n.hB[t]);}});
+  const xs=nodes[nodes.length-1].x||1;let y0=1e300,y1=-1e300;const see=v=>{if(isFinite(v)){if(v<y0)y0=v;if(v>y1)y1=v;}};segs.forEach(s=>{see(s.z1);see(s.z2);see(s.z1+s.h);see(s.z2+s.h);});nodes.forEach(n=>{see(n.n.inv);see(n.n.inv+n.n.max);if(n.hA){see(n.hA[t]);see(n.hB[t]);}n.hX.forEach(h=>{if(h)see(h[t]);});});
   if(!(y1>y0))y1=y0+1;const pad=(y1-y0)*.08;y0-=pad;y1+=pad;const svg=$('pchart'),F=frame(svg,0,xs,y0,y1,{xl:`Distance along the path (${U.l})`,yl:`Elevation (${U.l})`}),{X,Y}=F;let h=F.h;
   segs.forEach(s=>{if(s.l.kind!=='conduit'){h+=`<line x1="${X(s.a)}" x2="${X(s.b)}" y1="${Y(s.z1)}" y2="${Y(s.z2)}" stroke="var(--s4)" stroke-dasharray="4 4"/>`;return;}
     h+=`<path d="M${X(s.a)} ${Y(s.z1)}L${X(s.b)} ${Y(s.z2)}L${X(s.b)} ${Y(s.z2+s.h)}L${X(s.a)} ${Y(s.z1+s.h)}Z" fill="var(--panel)" stroke="var(--axis)" stroke-width="1.5"/>`;
     const c=s.cells;if(c&&c.m*(X(s.b)-X(s.a))/(s.l.len||1)*c.d>0){const sp=(X(s.b)-X(s.a))*c.d/s.l.len;if(sp>=3)for(let i=0;i<=c.m;i++){const f=(s.s.sense>0?(c.a+i)*c.d:s.l.len-(c.a+i)*c.d)/s.l.len,xx=s.a+f*(s.b-s.a),z=s.z1+f*(s.z2-s.z1);h+=`<line x1="${X(xx)}" x2="${X(xx)}" y1="${Y(z)}" y2="${Y(z+s.h)}" stroke="var(--grid)"/>`;}}
     [[s.qA,'s1',-1],[s.qB,'s2',1]].forEach(([q,col,off])=>{if(!q)return;const v=q[t]*s.s.sense;if(Math.abs(v)<1e-6)return;const mx=X((s.a+s.b)/2),my=Y((s.z1+s.z2+s.h)/2)+off*8,d=v>0?1:-1;h+=`<path d="M${mx+7*d} ${my}L${mx-7*d} ${my-5}L${mx-7*d} ${my+5}Z" fill="var(--${col})"/>`;});});
   nodes.forEach(n=>{h+=`<line x1="${X(n.x)}" x2="${X(n.x)}" y1="${Y(n.n.inv)}" y2="${Y(n.n.inv+n.n.max)}" stroke="var(--axis)" stroke-width="2"/>`;});
-  [['hA','s1'],['hB','s2']].forEach(([k,c])=>{let d='',pen=false;nodes.forEach(n=>{if(!n[k]){pen=false;return;}d+=(pen?'L':'M')+X(n.x).toFixed(1)+' '+Y(n[k][t]).toFixed(1);pen=true;});h+=`<path d="${d}" fill="none" stroke="var(--${c})" stroke-width="2.5"/>`;nodes.forEach(n=>{if(n[k])h+=`<circle cx="${X(n.x).toFixed(1)}" cy="${Y(n[k][t]).toFixed(1)}" r="3" fill="var(--${c})"/>`;});});
+  [[n=>n.hA,'s1'],[n=>n.hB,'s2']].concat(last.extra.map((e,i)=>[n=>n.hX[i],e.c])).forEach(([k,c])=>{let d='',pen=false;nodes.forEach(n=>{const a=k(n);if(!a){pen=false;return;}d+=(pen?'L':'M')+X(n.x).toFixed(1)+' '+Y(a[t]).toFixed(1);pen=true;});h+=`<path d="${d}" fill="none" stroke="var(--${c})" stroke-width="2.5"/>`;nodes.forEach(n=>{const a=k(n);if(a)h+=`<circle cx="${X(n.x).toFixed(1)}" cy="${Y(a[t]).toFixed(1)}" r="3" fill="var(--${c})"/>`;});});
   svg.innerHTML=h+F.tail;
-  const big=nodes.length>60;$('pT').innerHTML=`<tr><th>Node</th><th class="n">Station</th><th class="n">Invert</th><th class="n">Rim</th><th class="n">EPA head</th><th class="n">RASPIPE head</th><th class="n">Difference</th></tr>`+(big?nodes.filter((n,i)=>i%Math.ceil(nodes.length/40)===0):nodes).map(n=>`<tr><td>${esc(n.id)}</td><td class="n">${fmt(n.x,0)}</td><td class="n">${fmt(n.n.inv,2)}</td><td class="n">${n.n.max?fmt(n.n.inv+n.n.max,2):'–'}</td><td class="n">${n.hA?fmt(n.hA[t],3):'not in .out'}</td><td class="n">${n.hB?fmt(n.hB[t],3):'not in .out'}</td><td class="n">${n.hA?fmt(n.hB[t]-n.hA[t],3):''}</td></tr>`).join('');}
+  const big=nodes.length>60;$('pT').innerHTML=`<tr><th>Node</th><th class="n">Station</th><th class="n">Invert</th><th class="n">Rim</th><th class="n">EPA head</th><th class="n">RASPIPE head</th>${last.extra.map(e=>`<th class="n">${e.key==='s6dw'?'SWMM6 DW':'SWMM6 FV'} head</th>`).join('')}</tr>`+(big?nodes.filter((n,i)=>i%Math.ceil(nodes.length/40)===0):nodes).map(n=>`<tr><td>${esc(n.id)}</td><td class="n">${fmt(n.x,0)}</td><td class="n">${fmt(n.n.inv,2)}</td><td class="n">${n.n.max?fmt(n.n.inv+n.n.max,2):'–'}</td><td class="n">${n.hA?fmt(n.hA[t],3):'not in .out'}</td><td class="n">${n.hB?fmt(n.hB[t],3):'not in .out'}</td>${n.hX.map(h=>`<td class="n">${h?fmt(h[t],3):'not in .out'}</td>`).join('')}</tr>`).join('');}
 ['pFrom','pTo'].forEach(i=>$(i).addEventListener('change',profBuild));$('pTime').addEventListener('input',profDraw);
 $('pPlay').addEventListener('click',()=>{if(profTimer){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';return;}if(!last)return;$('pPlay').textContent='Pause';const n=last.A.nper,st=Math.max(1,Math.round(n/240));profTimer=setInterval(()=>{let v=+$('pTime').value+st;if(v>=n){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';v=n-1;}$('pTime').value=v;if($('p-prof').hidden){clearInterval(profTimer);profTimer=null;$('pPlay').textContent='Play';return;}profDraw();},100);});
 $('pCsv').addEventListener('click',()=>{if(!last||!prof)return setStatus('Run a model first.');const t=+$('pTime').value,U=last.units;
-  const c=csvHead([`# profile from ${prof.nodes[0].id} to ${prof.nodes[prof.nodes.length-1].id} at ${iso(last.A.days[t])}; heads in ${U.l}`]).concat(['node,station,invert,rim,EPA_head,RASPIPE_head'],prof.nodes.map(n=>`${n.id},${n.x},${n.n.inv},${n.n.inv+n.n.max},${n.hA?n.hA[t]:''},${n.hB?n.hB[t]:''}`)).join('\n')+'\n';
+  const c=csvHead([`# profile from ${prof.nodes[0].id} to ${prof.nodes[prof.nodes.length-1].id} at ${iso(last.A.days[t])}; heads in ${U.l}`]).concat(['node,station,invert,rim,EPA_head,RASPIPE_head'+last.extra.map(e=>e.key==='s6dw'?',SWMM6_MODIFIED_DW_head':',SWMM6_FV_head').join('')],prof.nodes.map(n=>`${n.id},${n.x},${n.n.inv},${n.n.inv+n.n.max},${n.hA?n.hA[t]:''},${n.hB?n.hB[t]:''}${n.hX.map(h=>','+(h?h[t]:'')).join('')}`)).join('\n')+'\n';
   saveFile(`${stem()}_profile_${prof.nodes[0].id}_${prof.nodes[prof.nodes.length-1].id}_run${last.id}.csv`,new Blob([c],{type:'text/csv'}));});
 
 /* ---------- Inside a cell ---------- */
@@ -678,6 +759,12 @@ let verifyDrawn=false;
 function table(id,head,rows,cls){$(id).innerHTML='<tr>'+head.map((h,i)=>`<th${cls&&cls[i]?' class="n"':''}>${h}</th>`).join('')+'</tr>'+rows.map(r=>'<tr>'+r.map((c,i)=>`<td${cls&&cls[i]?' class="n"':''}>${c}</td>`).join('')+'</tr>').join('');}
 function drawVerify(){if(verifyDrawn||!DATA)return;verifyDrawn=true;const V=DATA.verify,S=DATA.sweep,W=DATA.wave,B=DATA.bench;
   $('vHead').innerHTML=DATA.headline;
+  const X6=DATA.six;table('sxT',X6.head,X6.rows.map(r=>r.map(c=>esc(c))),[0,1,1,1,1,1,1,1,1]);
+  {const q=(k,c,w)=>({x:X6.chart[k].x,y:X6.chart[k].h,c,w});plot($('sxchart'),[q('exact','s4',4),q('ex5','s1'),q('s6dw','s5'),q('s6fv2','s3'),q('rpsw','s2')],{xl:'Distance along the pipe (ft)',yl:'Depth (ft)',yMin:0});}
+  $('sxN').innerHTML=X6.notes.map(n=>`<li>${esc(n)}</li>`).join('');
+  if(X6.opt&&X6.opt.rows.length)table('sxO',X6.opt.head,X6.opt.rows.map(r=>r.map(esc)),[0,1,1,1,1,1,1,1,1]);$('sxON').textContent=X6.opt?X6.opt.note:'';table('sxB',X6.box.head,X6.box.rows.map(r=>r.map(esc)),[0,1,1,1]);$('sxBN').textContent=X6.box.note;
+  if(X6.corpus.length)table('sxC',['Engine','Finished','Time limit','Median |continuity|','90th percentile','Past 1%','Run time'],X6.corpus.map(r=>r.map(esc)),[0,1,1,1,1,1,1]);$('sxCN').textContent=X6.corpusnote||'The corpus sample through SWMM6 is still running, so this table is not filled in yet.';
+  drawRas();
   $('mT').innerHTML=DATA.measures.map(m=>`<div class="tile"><b>${esc(m.t)}</b><div class="pair"><span class="v0">${esc(m.big)}</span></div><i>${esc(m.sub)}</i></div>`).join('');
   // Stoker
   const st=B.stoker;plot($('stchart'),[{x:st.exact.x,y:st.exact.h,c:'s3',w:4},{x:st.v11.x,y:st.v11.h,c:'s1'},{x:st.v12.x,y:st.v12.h,c:'s5'},{x:st.v12t.x,y:st.v12t.h,c:'s2'}],{xl:'Distance along the pipe (ft)',yl:'Depth (ft)',yMin:0});
@@ -710,11 +797,24 @@ function drawVerify(){if(verifyDrawn||!DATA)return;verifyDrawn=true;const V=DATA
   $('dT').innerHTML='<tr><th>No.</th><th>Finding</th><th>Status</th></tr>'+DATA.defects.map(d=>`<tr><td class="mono">${d[0]}</td><td>${esc(d[1])}</td><td><span class="chip ${d[3]}">${esc(d[2])}</span></td></tr>`).join('');
   $('vLimits').innerHTML=DATA.limits;}
 
+let rasAll=false;
+function drawRas(){const X=DATA.ras;if(!X)return;$('rasRerun').textContent=X.rerun;
+  table('rasT',X.score.head,X.score.rows.map(r=>r.map(esc)),[0,1,1,1,1,1]);table('rasTm',X.timing.head,X.timing.rows.map(r=>r.map(esc)),[0,1,1,1,1,1,1,1]);table('rasH',X.ho.head,X.ho.rows.map(r=>r.map(esc)),[0,1,1,1,1,1]);
+  $('rasN').innerHTML=X.notes.map(n=>`<li>${esc(n)}</li>`).join('');rasPlot();
+  const V=X.vol,keep=V.m.map((m,i)=>i).filter(i=>V.m[i]<=240);plot($('rasvchart'),[{x:keep.map(i=>V.m[i]/60),y:keep.map(i=>V.gap[i]),c:'s4',w:3,pts:1},{x:keep.map(i=>V.m[i]/60),y:keep.map(i=>12.566*V.over[i]),c:'s2'}],{xl:'Hours from the start of the run',yl:'Volume (ft³)'});
+  $('rasVN').textContent=`RAS's cell tables stop at the crown, so any water in a full cell beyond its table has to be stored somewhere else. The gap reaches ${X.gap.toLocaleString('en-US')} ft³ while 84 cells are full, ${X.r6} ft² per full cell per ft of head on EXTRAN 1 and ${X.r2} on EXTRAN 2, and it closes when they drain. That is the number RASPIPE_PRESSURE_AREA takes.`;}
+function rasPlot(){const S=DATA.ras.ser,k=S.t.map((t,i)=>i).filter(i=>rasAll||(S.t[i]>=.3&&S.t[i]<=3.6)),g=(a,c,w,dash)=>({x:k.map(i=>S.t[i]),y:k.map(i=>a[i]),c,w,dash});
+  plot($('raschart'),[g(S.epa,'s1'),g(S.rp,'s2'),g(S.pa,'s3'),g(S.ras,'s4',3,'7 4')],{xl:'Hours from the start of the run',yl:'Head (ft)'});$('rasZoom').textContent=rasAll?'Show the fill and drain':'Show the whole run';}
+$('rasZoom').addEventListener('click',()=>{rasAll=!rasAll;rasPlot();});
+$('rasCsv').addEventListener('click',()=>{const S=DATA.ras.ser;const c=['# SWMM5 RASPIPE '+VERSION+': head at node 82309 on HEC-RAS EXTRAN 1, rim at 80608 matched, ft','# HEC-RAS 7.0.2 stored result; RASPIPE engine 1.3 native, with and without RASPIPE_PRESSURE_AREA 12.566; EPA 5.2.4 DYNWAVE','hours,HEC_RAS_7_0_2,RASPIPE,RASPIPE_full_pipe_storage,EPA_5_2_4'].concat(S.t.map((t,i)=>[t,S.ras[i],S.rp[i],S.pa[i],S.epa[i]].join(','))).join('\n')+'\n';saveFile('hecras_extran1_head_82309.csv',new Blob([c],{type:'text/csv'}));});
+
 /* ---------- About ---------- */
 $('optT').innerHTML='<tr><th>Option</th><th>Default</th><th>Meaning</th></tr>'+DATA.options.map(o=>`<tr><td class="mono">${o[0]}</td><td class="mono">${o[1]}</td><td>${esc(o[2])}</td></tr>`).join('');
 $('srcs').innerHTML=DATA.sources.map(s=>`<li>${s[1]?`<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`:esc(s[0])}</li>`).join('');
 $('aiuse').innerHTML=DATA.aiuse.map(p=>`<p>${p}</p>`).join('');
 $('prov').innerHTML=DATA.prov;$('ver').textContent='v'+VERSION;
+$('mdBtn').addEventListener('click',()=>{const el=document.getElementById('app-md');if(!el)return setStatus('The technical summary is not in this build.');saveFile('SWMM5-RASPIPE.md',new Blob([el.textContent],{type:'text/markdown'}));});
+$('mdLink').addEventListener('click',async e=>{try{const r=await fetch('SWMM5-RASPIPE.md',{method:'HEAD'});if(r.ok)return;}catch(x){}e.preventDefault();$('mdBtn').click();});
 $('docxBtn').addEventListener('click',()=>{if(!DOCX_B64||DOCX_B64.length<100)return setStatus('The .docx is not in this build.');saveFile('SWMM5-RASPIPE.docx',new Blob([b64bytes(DOCX_B64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));});
 document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=document.getElementById(a.getAttribute('href').slice(1));if(t){t.open=true;t.scrollIntoView();}}));
 
@@ -731,19 +831,19 @@ function css(v){return getComputedStyle(document.documentElement).getPropertyVal
 function rgb(c){const m=c.match(/^#(..)(..)(..)$/);return m?[parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)]:[128,128,128];}
 $('gifBtn').addEventListener('click',async()=>{if(!last)return setStatus('Run a model first.');const btn=$('gifBtn');btn.disabled=true;setStatus('Drawing the GIF…');await new Promise(r=>setTimeout(r,30));
   try{const W=640,H=360,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d',{willReadFrequently:true}),s=series();
-    const bg=rgb(css('--face')),fg=rgb(css('--ink-strong')),dim=rgb(css('--axis')),s1=rgb(css('--s1')),s2=rgb(css('--s2')),gr=rgb(css('--grid'));
-    const pal=[bg,gr];for(let i=1;i<=6;i++)pal.push(bg.map((v,k)=>Math.round(v+(fg[k]-v)*i/6)));for(let i=1;i<=3;i++){pal.push(bg.map((v,k)=>Math.round(v+(s1[k]-v)*i/3)));pal.push(bg.map((v,k)=>Math.round(v+(s2[k]-v)*i/3)));}pal.push(dim);while(pal.length<16)pal.push(bg);
+    const bg=rgb(css('--face')),fg=rgb(css('--ink-strong')),dim=rgb(css('--axis')),cols=s.map(q=>rgb(css('--'+q.c))),s1=cols[0],s2=cols[1],gr=rgb(css('--grid'));
+    const pal=[bg,gr];for(let i=1;i<=6;i++)pal.push(bg.map((v,k)=>Math.round(v+(fg[k]-v)*i/6)));cols.forEach(c=>{for(let i=2;i<=3;i++)pal.push(bg.map((v,k)=>Math.round(v+(c[k]-v)*i/3)));});pal.push(dim);while(pal.length<32)pal.push(bg);
     const m={l:60,r:14,t:40,b:66},iw=W-m.l-m.r,ih=H-m.t-m.b;let y0=1e300,y1=-1e300;s.forEach(q=>{for(const v of q.y){if(v<y0)y0=v;if(v>y1)y1=v;}});if(!(y1>y0))y1=y0+1;const x1=s[0].x[s[0].x.length-1],x0=s[0].x[0];
     const X=v=>m.l+(v-x0)/(x1-x0||1)*iw,Y=v=>m.t+ih-(v-y0)/(y1-y0)*ih,col=c=>`rgb(${c[0]},${c[1]},${c[2]})`;const names=$('chartT').textContent,rp=last.rb,ra=last.ra;
-    const caps=[`${last.name}: the same model, two solvers`,`Amber is EPA 5.2.4 DYNWAVE, blue is RASPIPE`,`Routing continuity ${fmt(ra.cont)}% against ${fmt(rp.cont)}%`,`RASPIPE mesh ${rp.cells||''} cells / faces, ${fmt(rp.trials,2)} trials per step`];
+    const caps=[`${last.name}: the same model, ${s.length} solvers`,s.map(q=>q.label).join(', ').slice(0,74),`Routing continuity ${fmt(ra.cont)}% against ${fmt(rp.cont)}%`,`RASPIPE mesh ${rp.cells||''} cells / faces, ${fmt(rp.trials,2)} trials per step`];
     const frames=[],N=28,n=s[0].x.length;const cache=new Map();const near=(r,gg,bb)=>{const k=(r<<16)|(gg<<8)|bb;let v=cache.get(k);if(v!==undefined)return v;let best=0,bd=1e12;for(let i=0;i<pal.length;i++){const p=pal[i],d=(p[0]-r)**2+(p[1]-gg)**2+(p[2]-bb)**2;if(d<bd){bd=d;best=i;}}cache.set(k,best);return best;};
     for(let f=1;f<=N;f++){const lim=Math.max(2,Math.floor(n*Math.min(1,f/(N-4))));g.fillStyle=col(bg);g.fillRect(0,0,W,H);g.font='600 15px sans-serif';g.fillStyle=col(fg);g.fillText(names,m.l,24);g.font='12px monospace';g.fillStyle=col(dim);g.strokeStyle=col(gr);
       for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4,p=Y(v);g.beginPath();g.moveTo(m.l,p);g.lineTo(W-m.r,p);g.stroke();g.fillText(String(+v.toPrecision(4)),6,p+4);}
       g.fillText('hours',W-60,m.t+ih+16);g.fillText(String(+x1.toFixed(2)),W-m.r-40,m.t+ih+32);g.fillText(String(+x0.toFixed(2)),m.l,m.t+ih+32);
-      [[s[0],s1],[s[1],s2]].forEach(([q,c])=>{g.strokeStyle=col(c);g.lineWidth=2;g.beginPath();const st=Math.max(1,Math.floor(lim/500));for(let i=0;i<lim;i+=st){const a=X(q.x[i]),b=Y(q.y[i]);i?g.lineTo(a,b):g.moveTo(a,b);}g.stroke();});g.lineWidth=1;
+      s.map((q,i)=>[q,cols[i]]).forEach(([q,c])=>{g.strokeStyle=col(c);g.lineWidth=2;g.setLineDash(q.dash?[7,4]:[]);g.beginPath();const li=Math.max(2,Math.floor(q.x.length*Math.min(1,f/(N-4)))),st=Math.max(1,Math.floor(li/500));for(let i=0;i<li;i+=st){const a=X(q.x[i]),b=Y(q.y[i]);i?g.lineTo(a,b):g.moveTo(a,b);}g.stroke();});g.lineWidth=1;g.setLineDash([]);
       g.font='14px sans-serif';g.fillStyle=col(fg);g.fillText(caps[Math.min(caps.length-1,Math.floor((f-1)/N*caps.length))],m.l,H-14);
       const d=g.getImageData(0,0,W,H).data,fr=new Uint8Array(W*H);for(let i=0,j=0;i<fr.length;i++,j+=4)fr[i]=near(d[j],d[j+1],d[j+2]);frames.push(fr);if(f%6===0){setStatus('Drawing the GIF, frame '+f+' of '+N+'…');await new Promise(r=>setTimeout(r,0));}}
-    const bytes=gifEncode(frames,W,H,pal.slice(0,16),30);await saveFile((last.name||'model').replace(/\.inp$/i,'')+'_raspipe.gif',new Blob([bytes],{type:'image/gif'}));
+    const bytes=gifEncode(frames,W,H,pal.slice(0,32),30);await saveFile((last.name||'model').replace(/\.inp$/i,'')+'_raspipe.gif',new Blob([bytes],{type:'image/gif'}));
   }catch(e){setStatus('GIF failed: '+e.message);}finally{btn.disabled=false;}});
 
 /* ---------- boot ---------- */

@@ -9,10 +9,13 @@ function runs(s,o={}){const out=[];const re=/(`[^`]+`|\*\*[^*]+\*\*)/g;let i=0,m
 let nol=0;const kids=[],cfg=[{reference:'bul',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:400,hanging:240}}}}]}];
 kids.push(new Paragraph({heading:HeadingLevel.TITLE,children:[new TextRun(e.title)]}));
 kids.push(new Paragraph({spacing:{after:80},children:[new TextRun({text:e.sub,color:'475569',size:24})]}));
-kids.push(new Paragraph({spacing:{after:280},children:[new TextRun({text:'SWMM5 RASPIPE 1.2. November 2026.',color:'475569',size:20})]}));
+kids.push(new Paragraph({spacing:{after:280},children:[new TextRun({text:e.byline,color:'475569',size:20})]}));
 for(const b of e.blocks){
   if(b.t==='h2')kids.push(new Paragraph({heading:HeadingLevel.HEADING_1,children:[new TextRun(b.x)]}));
   else if(b.t==='p')kids.push(new Paragraph({spacing:{after:140,line:300},children:runs(b.x)}));
+  else if(b.t==='lede')kids.push(new Paragraph({spacing:{after:160,line:290},children:runs(b.x,{italics:true,color:'334155'})}));
+  else if(b.t==='h3')kids.push(new Paragraph({heading:HeadingLevel.HEADING_2,children:[new TextRun(b.x)]}));
+  else if(b.t==='panelopen'||b.t==='panelclose'){}
   else if(b.t==='code')kids.push(new Paragraph({spacing:{before:60,after:160},indent:{left:240},shading:{type:D.ShadingType.CLEAR,fill:'F1F5F9'},children:b.x.split('\n').map((l,i)=>new TextRun({text:l,font:MONO,size:18,break:i?1:0}))}));
   else if(b.t==='fig'){const [w,h]=e.sizes[b.k],W=624,H=Math.round(W*h/w);
     kids.push(new Paragraph({keepNext:true,spacing:{before:160,after:60},alignment:AlignmentType.CENTER,children:[new ImageRun({type:'png',data:fs.readFileSync(`${e.d}/fig/${b.k}.png`),transformation:{width:W,height:H},altText:{title:b.k,description:b.x,name:b.k}})]}));
@@ -30,7 +33,8 @@ for(const b of e.blocks){
 const doc=new Document({creator:'SWMM5 RASPIPE',title:e.title,description:e.sub,
   styles:{default:{document:{run:{font:FONT,size:21,color:'1F2937'}},
     title:{run:{font:FONT,size:44,bold:true,color:'1E3A5F'},paragraph:{spacing:{before:0,after:100},keepNext:true}},
-    heading1:{run:{font:FONT,size:29,bold:true,color:'1E3A5F'},paragraph:{spacing:{before:320,after:120},keepNext:true}}}},
+    heading1:{run:{font:FONT,size:29,bold:true,color:'1E3A5F'},paragraph:{spacing:{before:320,after:80},keepNext:true}},
+    heading2:{run:{font:FONT,size:24,bold:true,color:'1E3A5F'},paragraph:{spacing:{before:220,after:80},keepNext:true}}}},
   numbering:{config:cfg},
   sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1296,bottom:1224,left:1440,right:1440}}},
     footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Page ',size:17,color:'64748B'}),new TextRun({children:[PageNumber.CURRENT],size:17,color:'64748B'})]})]})},children:kids}]});

@@ -113,6 +113,7 @@
 #define  w_RASPIPE_COURANT   "RASPIPE_COURANT"
 #define  w_RASPIPE_STAGE     "RASPIPE_INITIAL_STAGE"
 #define  w_RASPIPE_WARMUP    "RASPIPE_WARMUP"
+#define  w_RASPIPE_PRESSAREA "RASPIPE_PRESSURE_AREA"
 
 // Flow Units
 #define  w_CFS               "CFS"
